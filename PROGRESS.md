@@ -79,3 +79,30 @@
 - `npm run build`: pasa; `next build` muestra `ƒ Proxy (Middleware)` y `/login` y `/registro` como Partial Prerender.
 - Smoke test en servidor de producción: HTTP 200 en `/login`, `/registro`, `/403` y `/api/auth/providers` (Google y Credentials presentes); `/404` devuelve 404 con la página amigable; `/cuenta/pedidos` y `/admin` redirigen 307 a `/login?next=…` sin sesión.
 - Smoke test con JWT sintético: un `customer` que intenta `/admin` recibe 307 a `/403`; un `admin` pasa el guardián (responde 404 porque las páginas del panel son Fase 3). Ningún servidor quedó escuchando y no se ejecutaron comandos que modifiquen la base.
+
+## 2026-11-19 — Fase 3: catálogo y administración de productos (completa)
+
+**Qué se hizo**
+
+- Se creó `src/db/queries/catalog.ts`: listado compartido público/admin con precio efectivo, stock total y "más vendidos" calculado solo desde ítems de pedidos pagados; detalle con categoría, imágenes y variantes; helpers de existencia/slug e historial de stock.
+- Se agregaron `src/lib/money.ts` (`formatMoney`, `parsePriceToCents`, `centsToInput`) y `src/lib/validators/catalog.ts` con Zod para queries, productos, categorías, variantes, imágenes, ajustes de stock y visitas.
+- Se creó `src/db/transaction.ts` con un pool WebSocket de Neon para transacciones interactivas: el cliente HTTP de `client.ts` no las soporta y no se agregó ninguna dependencia nueva. El ajuste de stock usa `FOR UPDATE` y nunca permite stock negativo.
+- Storefront: layout con navbar y footer responsive, inicio con destacados calculados y categorías, `/catalogo` con búsqueda, filtros, orden y paginación, y `/producto/[slug]` con galería, selector de variantes, estados de stock y registro de visitas (cookie httpOnly `visitor_token`, máximo una por producto/hora).
+- El botón "Agregar al carrito" queda visible pero deshabilitado con un aviso: el carrito es Fase 4. No simula éxito ni persiste nada.
+- Administración: layout con sidebar y topbar, dashboard, CRUD de categorías y productos (variantes + imágenes), ajuste de stock con `stock_movements` e historial por variante. Todas las actions y queries verifican `requireAdmin()` además del proxy.
+- Cloudinary: subida firmada directa con SHA-1 sobre parámetros ordenados + API secret usando `node:crypto`. Las credenciales se validan en el punto de uso, así que con las variables vacías el build sigue funcionando.
+- Se agregaron `remotePatterns` para `res.cloudinary.com` y `placehold.co` en `next.config.ts`.
+
+**Qué falta**
+
+- Las credenciales de Cloudinary siguen vacías: la subida de imágenes muestra un error claro hasta configurarlas en `.env.local`. Lo mismo vale para Google y MercadoPago en sus fases.
+- Con `cacheComponents`, `notFound()` dentro del boundary de streaming responde HTTP 200 con la UI de "no encontrado" (soft 404). La UX es correcta; si se quiere un 404 real se debería mover la resolución del slug fuera de Suspense.
+- Fase 4 (carrito) y el resto de las fases según el plan.
+
+**Verificación**
+
+- `npm run typecheck`, `npm run lint` y `npm run build`: pasan sin errores. `next build` reporta todas las rutas como Partial Prerender.
+- Fix de build: con `cacheComponents: true`, el footer asíncrono del layout store y el `requireAdmin()` del layout admin bloqueaban el prerender; ambos se envolvieron en `<Suspense>` con fallback y `params` se resuelve dentro del boundary en `/producto/[slug]`.
+- Smoke de base de datos (solo lectura): 5 categorías, 16 productos activos, 28 variantes activas y 1 fila de `store_settings`; top por ventas reales coherente y detalle/filtro de `camiseta-basica-algodon` correctos.
+- Smoke HTTP en servidor de producción: 200 en `/`, `/catalogo`, `/catalogo?q=camiseta`, `/producto/camiseta-basica-algodon`, `/login` y `/registro`; `/admin` redirige 307 a login sin sesión. El inicio renderiza productos reales con imágenes.
+- No se ejecutaron comandos que modifiquen la base, no se crearon archivos de credenciales y no se hicieron commits.

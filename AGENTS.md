@@ -379,11 +379,11 @@ Si el tiempo se acaba, se entrega lo marcado completo y se documenta en `PROGRES
 - [x] Redirección `next` tras login
 
 ### Fase 3 — Catálogo y administración de productos (P0)
-- [ ] Layout del storefront (navbar, footer, responsive) y del admin (sidebar)
-- [ ] CRUD de categorías y productos con variantes e imágenes (Cloudinary) en admin
-- [ ] Ajuste de stock con `stock_movements`
-- [ ] Inicio, catálogo (búsqueda, filtros, orden, paginación) y detalle de producto
-- [ ] Registro de `product_views`
+- [x] Layout del storefront (navbar, footer, responsive) y del admin (sidebar)
+- [x] CRUD de categorías y productos con variantes e imágenes (Cloudinary) en admin
+- [x] Ajuste de stock con `stock_movements`
+- [x] Inicio, catálogo (búsqueda, filtros, orden, paginación) y detalle de producto
+- [x] Registro de `product_views`
 
 ### Fase 4 — Carrito (P0)
 - [ ] Carrito de invitado por cookie + carrito de usuario
