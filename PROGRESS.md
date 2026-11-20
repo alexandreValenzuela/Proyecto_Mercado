@@ -288,3 +288,30 @@ Estado final: `src/lib/mercadopago.ts` elige la URL según `MP_ENVIRONMENT`, con
 - Smoke de base de datos (solo lectura, funciones reales ejecutadas con `tsx` sobre el rango acotado 2026-08-01 a 2026-11-20): 20 provincias, 20 ciudades, 28 pedidos de retiro, 7 días con ventas, 5 franjas con ventas, 42 celdas de calor, 98 visitas, 0 carritos con ítems, 180 pedidos creados, 158 pagados, 0 carritos abandonados, 8 productos en el ranking, 20 clientes (20 recurrentes) y 7 hallazgos. Chequeo recursivo: ningún `NaN`/`Infinity`.
 - Smoke HTTP en servidor de producción: `/admin/mercado` y `?period=week` redirigen 307 a `/login?next=…` sin sesión; con JWT admin sintético responden 200 y contienen todas las secciones (hallazgos, provincias, embudo, abandono, mapa de calor, recompra), sin caer en el boundary de error. Servidor detenido y puerto libre.
 - `git status --short`: solo código de Fase 9, el enlace del sidebar, `PROGRESS.md` y `AGENTS.md`. No se crearon credenciales, no se mutó la base, no se llamó a MercadoPago, no se tocó código `TEST-` ni se hicieron commits.
+
+## 2026-11-20 — Fase 10: cierre funcional (clientes, configuración y documentación)
+
+**Qué se hizo**
+
+- `/admin/clientes`: listado paginado con búsqueda por nombre o email (Zod en `src/lib/validators/customers.ts`), cantidad de pedidos y total gastado calculados solo con estados de ingreso (`paid`, `preparing`, `shipped`, `delivered`), etiqueta Demo y enlace al detalle. El detalle muestra datos de contacto, direcciones guardadas e historial de pedidos con estado y enlace a `/admin/pedidos/[id]`. Incluye `loading.tsx` y `Suspense`.
+- `src/db/queries/customers.ts`: `listAdminCustomers` y `getAdminCustomerDetail` llaman a `requireAdmin()` como primera instrucción. La agregación se hace en una subconsulta con LEFT JOIN para no multiplicar filas; se seleccionan columnas explícitas, así que nunca se expone `passwordHash`. No se creó `src/server/admin/customers.ts` porque no hacía falta lógica adicional.
+- `/admin/configuracion`: `storeSettingsFormSchema` valida importes en centavos como strings enteros no negativos (umbral vacío = `null`), emails opcionales y booleanos; `updateStoreSettings` vuelve a exigir admin y actualiza la fila única (la crea si todavía no se sembró); `updateStoreSettingsAction` reporta errores por campo y revalida `/admin/configuracion`, `/`, `/catalogo`, `/checkout` y `/carrito`. El formulario cliente usa `useActionState` con `Input`/`Label`/`Button` y el patrón hidden input + checkbox para los booleanos. Incluye `loading.tsx`.
+- Se conectaron las entradas "Clientes" y "Configuración" del sidebar; no se tocó ningún otro ítem.
+- `README.md`: se sacó el texto de Fase 0/placeholders y quedó documentado el ciclo completo (instalación, todas las variables incluido `MP_ENVIRONMENT`, administrador, semillas, prueba de Checkout Pro con credenciales de Test y tarjetas de prueba del panel, túnel para el webhook, idempotencia, reintento de pago y runbook de Railway). No se escribió ninguna credencial ni número de tarjeta.
+
+**Qué falta**
+
+- Deploy en Railway: no se ejecutó (no hay CLI/cuenta en este entorno).
+- Prueba en producción/registro, Google, carrito → pago sandbox real → webhook → administrador ve el pedido: pendiente; la firma local se probó en Fase 5, pero no el flujo completo con pagos reales.
+- Revisión responsive en celular de todo el flujo cliente: pendiente.
+- Limitación conocida: el menú del navbar en celular solo enlaza Inicio y Catálogo, y las rutas `/nosotros` y `/cuenta/perfil` no existen (verificado en `src/components/store/store-navbar.tsx` y en el árbol de `src/app`). No se agregaron en esta tarea para no salir del alcance.
+
+**Verificación**
+
+- `npm run typecheck`: pasa sin errores.
+- `npm run lint`: pasa sin errores ni warnings.
+- `npm run build`: pasa sin errores; `/admin/clientes`, `/admin/clientes/[id]` y `/admin/configuracion` figuran como Partial Prerender.
+- `git diff --check`: limpio (exit 0; solo los avisos de conversión LF → CRLF por la config de Git en el working copy).
+- Smoke de base de datos (solo lectura, ejecutado con `tsx` sobre el mismo armado de consulta): 20 clientes con coincidencia "a", primer registro con 14 pedidos de ingreso y 758900 centavos, y detalle con direcciones y pedidos coherentes. No se ejecutó `updateStoreSettings` contra la base para no mutar datos.
+- Smoke HTTP con `next start`: las tres rutas nuevas sirven el shell sin errores; el proxy redirige a `/login` cuando la sesión no es válida. No se logró una cookie admin sintética aceptada por Auth.js, así que el render autenticado no se verificó por HTTP en esta sesión; no se generaron credenciales ni se hizo deploy.
+- No se agregaron dependencias, no se tocó el esquema ni se crearon migraciones, no se mutó la base y no se hicieron commits.

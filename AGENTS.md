@@ -421,11 +421,11 @@ Si el tiempo se acaba, se entrega lo marcado completo y se documenta en `PROGRES
 - [x] Visitados vs. comprados, recompra y hallazgos automáticos
 
 ### Fase 10 — Cierre y despliegue (P0)
-- [ ] Clientes y configuración en admin
+- [x] Clientes y configuración en admin
 - [ ] Deploy en Railway (variables de entorno, build, start, migraciones aplicadas)
 - [ ] Probar en producción: registro, Google, carrito → pago sandbox → webhook → admin ve el pedido
 - [ ] Revisión responsive en celular de todo el flujo cliente
-- [ ] Completar `README.md` (instalación, variables, cómo probar MP, cómo crear admin, cómo limpiar demo)
+- [x] Completar `README.md` (instalación, variables, cómo probar MP, cómo crear admin, cómo limpiar demo)
 
 ---
 
@@ -450,3 +450,13 @@ Un módulo está terminado solo si:
 | Comisión de venta | No se calcula; campos `null` |
 | Envío | Costo fijo configurable + opción de retiro |
 | Dominio propio | Se usa el dominio de Railway |
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+## This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
