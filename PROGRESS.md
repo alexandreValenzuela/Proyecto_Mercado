@@ -443,4 +443,4 @@ Estado final: `src/lib/mercadopago.ts` elige la URL según `MP_ENVIRONMENT`, con
 
 - `npm run typecheck`, `npm run lint`, `npm run build` (35 rutas) y `git diff --check`: pasan.
 - Las 16 URLs responden HTTP 200 con content-type de imagen. Tamaños: Dreamstime 800×800, Tiendanube 1024×1024; varias miniaturas de Google de 203–253 px pueden verse borrosas en grande.
-- Falta: desplegar el cambio de hosts y confirmar en producción que el optimizador de Next.js (`/_next/image`) sirve las imágenes, y revisar visualmente el resultado.
+- Desplegado (deploy `3cdddf8c`). Verificado en producción: `/_next/image?url=…&w=640&q=75` devuelve 200 `image/jpeg` para las tres hosts nuevas (Dreamstime 10 KB, Tiendanube 28 KB, Google 13 KB), y `/catalogo` devuelve 200 con URLs optimizadas de esos tres dominios (ya no aparece `placehold.co`). Falta: revisión visual final por parte del usuario.
