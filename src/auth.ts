@@ -66,30 +66,4 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
-  callbacks: {
-    ...authConfig.callbacks,
-    async jwt(params) {
-      // La config edge-safe pone los claims base; acá podemos consultar la BD.
-      const token = (await authConfig.callbacks?.jwt?.(params)) ?? params.token;
-
-      if (token.sub) {
-        try {
-          const [currentUser] = await getDb()
-            .select({ role: users.role })
-            .from(users)
-            .where(eq(users.id, token.sub))
-            .limit(1);
-
-          if (currentUser && currentUser.role !== token.role) {
-            token.role = currentUser.role;
-          }
-        } catch (error) {
-          // Un fallo de base no debe romper la sesión: se conserva el rol previo.
-          console.error("No se pudo refrescar el rol del token", error);
-        }
-      }
-
-      return token;
-    },
-  },
 });

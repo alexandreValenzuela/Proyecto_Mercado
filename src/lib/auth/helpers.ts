@@ -1,5 +1,8 @@
+import { eq } from "drizzle-orm";
 import type { Session } from "next-auth";
 import { auth } from "@/auth";
+import { getDb } from "@/db/client";
+import { users } from "@/db/schema";
 
 export type AuthorizationFailure = "unauthenticated" | "forbidden";
 
@@ -34,6 +37,19 @@ export async function requireUser(): Promise<AuthenticatedSession> {
 export async function requireAdmin(): Promise<AuthenticatedSession> {
   const session = await requireUser();
   if (session.user.role !== "admin") {
+    throw new AuthorizationError("forbidden");
+  }
+
+  // El token se emite al iniciar sesión: si el rol cambió después, la base manda.
+  // Se consulta acá y no en el callback `jwt` para no consultar la BD en cada
+  // render público (ni durante el prerender de las rutas con PPR).
+  const [currentUser] = await getDb()
+    .select({ role: users.role })
+    .from(users)
+    .where(eq(users.id, session.user.id))
+    .limit(1);
+
+  if (currentUser?.role !== "admin") {
     throw new AuthorizationError("forbidden");
   }
 

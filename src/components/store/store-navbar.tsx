@@ -1,5 +1,7 @@
-import { ShoppingBag, UserRound } from "lucide-react";
+import { Shield, ShoppingBag, UserRound } from "lucide-react";
 import Link from "next/link";
+import { connection } from "next/server";
+import { auth } from "@/auth";
 import { siteConfig } from "@/config/site";
 import { getCartSummary } from "@/server/cart/actions";
 
@@ -18,7 +20,13 @@ const mobileLinks = [
 ];
 
 export async function StoreNavbar() {
-  const { itemCount } = await getCartSummary();
+  // auth() genera un valor aleatorio de CSRF: con PPR hay que diferir a request time.
+  await connection();
+  const [{ itemCount }, session] = await Promise.all([getCartSummary(), auth()]);
+  const isAdmin = session?.user?.role === "admin";
+  const visibleMobileLinks = isAdmin
+    ? [...mobileLinks, { href: "/admin", label: "Panel de administración" }]
+    : mobileLinks;
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-surface/95 backdrop-blur">
@@ -36,6 +44,16 @@ export async function StoreNavbar() {
         </nav>
 
         <div className="flex items-center gap-1">
+          {isAdmin && (
+            <Link
+              href="/admin"
+              className="inline-flex items-center gap-2 rounded-xl bg-primary px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-primary/90"
+              aria-label="Panel de administración"
+            >
+              <Shield className="size-5" aria-hidden />
+              <span className="hidden md:inline">Admin</span>
+            </Link>
+          )}
           <Link
             href="/login"
             className="inline-flex items-center gap-2 rounded-xl px-2.5 py-2 text-sm text-text-muted transition-colors hover:bg-primary-soft hover:text-primary"
@@ -59,7 +77,7 @@ export async function StoreNavbar() {
               Menú
             </summary>
             <nav className="absolute right-0 top-full mt-2 flex w-48 flex-col gap-1 rounded-xl border border-border bg-surface p-2 shadow-lg">
-              {mobileLinks.map((link) => (
+              {visibleMobileLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
