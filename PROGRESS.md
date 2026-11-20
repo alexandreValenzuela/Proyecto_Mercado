@@ -386,3 +386,21 @@ Estado final: `src/lib/mercadopago.ts` elige la URL según `MP_ENVIRONMENT`, con
 - `npm run typecheck`, `npm run lint`, `npm run build` (35 rutas) y `git diff --check`: pasan.
 - Logs de Railway sin errores de checkout; solo un `CredentialsSignin` de una prueba de contraseña y el `webhook: firma inválida` de una sonda deliberada sin firma.
 - Falta: redesplegar y repetir la compra desde el celular para confirmar que abre el checkout de MP.
+- Redesplegado (deploy `77963312`, SUCCESS). El usuario sigue sin ver que el botón reaccione ("no cambia nada") y no se creó ningún pedido nuevo después del deploy, así que el action ni se ejecuta.
+- Diagnóstico adicional: credenciales MP confirmadas como cuenta Test (`test_user_9036260108829387690@testuser.com`, `MLA`); la URL sandbox responde 302; `type="submit"` se reenvía bien en el HTML de producción; los 14 chunks JS responden 200; no hay errores de Server Action en los logs. Causa raíz aún no confirmada.
+
+## 2026-11-20 — Checkout: errores visibles en el formulario
+
+**Qué se hizo**
+
+- `src/components/store/checkout-form.tsx`: `handleSubmit` pasó a `handleSubmit(onValid, onInvalid)`. `onInvalid` muestra "Revisá los datos marcados en rojo y volvé a intentar." y `onValid` envuelve la llamada al action en `try/catch` con "No se pudo iniciar el pago. Recargá la página e intentá de nuevo.".
+- `src/components/store/retry-payment-button.tsx`: mismo patrón de `try/catch` con "No se pudo reintentar el pago. Recargá la página e intentá de nuevo.".
+
+**Por qué**
+
+- Si Zod rechaza el formulario o el Server Action lanza, hoy no aparece ningún mensaje cerca del botón y el usuario percibe que "no pasa nada". Hacer el fallo visible permite identificar si el problema es validación, action o hidratación.
+
+**Verificación**
+
+- `npm run typecheck`, `npm run lint`, `npm run build` (35 rutas) y `git diff --check`: pasan.
+- Falta: desplegar y repetir la prueba desde el celular en modo incógnito para ver qué mensaje aparece.
