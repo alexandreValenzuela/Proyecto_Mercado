@@ -1,6 +1,7 @@
-import { LogOut } from "lucide-react";
+import { LogOut, Store } from "lucide-react";
+import Link from "next/link";
 import { signOut } from "@/auth";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 
 export function AdminTopbar({ user }: { user: { name?: string | null; email?: string | null } }) {
   async function logout() {
@@ -19,6 +20,14 @@ export function AdminTopbar({ user }: { user: { name?: string | null; email?: st
           <p className="text-sm font-medium text-text">{user.name ?? "Administrador"}</p>
           <p className="text-xs text-text-muted">{user.email}</p>
         </div>
+        <Link
+          href="/"
+          className={buttonVariants({ variant: "outline", size: "sm" })}
+          title="Volver a la tienda"
+        >
+          <Store className="size-4" aria-hidden />
+          <span className="hidden sm:inline">Volver a la tienda</span>
+        </Link>
         <form action={logout}>
           <Button type="submit" variant="outline" size="sm" title="Cerrar sesión">
             <LogOut className="size-4" aria-hidden />
