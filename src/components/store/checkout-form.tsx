@@ -88,7 +88,13 @@ export function CheckoutForm({ addresses, settings, cart }: Props) {
       const result = await createCheckout(input);
       if (!result.ok) {
         setFeedback(result.message ?? "No se pudo iniciar el pago. Intentá de nuevo.");
+        return;
       }
+      if (result.checkoutUrl) {
+        window.location.assign(result.checkoutUrl);
+        return;
+      }
+      setFeedback("No se pudo iniciar el pago. Intentá de nuevo.");
     });
   });
 

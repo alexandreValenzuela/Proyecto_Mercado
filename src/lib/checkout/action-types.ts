@@ -6,6 +6,7 @@ export type CheckoutActionResult = {
   fieldErrors: Partial<Record<CheckoutField | string, string>>;
   /** Pedido creado aunque fallara MercadoPago: permite reintentar sin duplicarlo. */
   orderId: string | null;
+  checkoutUrl: string | null;
 };
 
 export function checkoutFailure(
@@ -13,5 +14,9 @@ export function checkoutFailure(
   fieldErrors: Partial<Record<string, string>> = {},
   orderId: string | null = null,
 ): CheckoutActionResult {
-  return { ok: false, message, fieldErrors, orderId };
+  return { ok: false, message, fieldErrors, orderId, checkoutUrl: null };
+}
+
+export function checkoutSuccess(checkoutUrl: string, orderId: string | null): CheckoutActionResult {
+  return { ok: true, message: null, fieldErrors: {}, orderId, checkoutUrl };
 }

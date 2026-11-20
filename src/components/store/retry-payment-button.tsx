@@ -22,7 +22,13 @@ export function RetryPaymentButton({ orderId }: { orderId: string }) {
             const result = await retryPayment({ orderId });
             if (!result.ok) {
               setFeedback(result.message ?? "No se pudo reintentar el pago. Intentá de nuevo.");
+              return;
             }
+            if (result.checkoutUrl) {
+              window.location.assign(result.checkoutUrl);
+              return;
+            }
+            setFeedback("No se pudo reintentar el pago. Intentá de nuevo.");
           });
         }}
       >

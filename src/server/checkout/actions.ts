@@ -1,12 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import type { ZodError } from "zod";
 import { findOrderForUser } from "@/db/queries/orders";
 import { z } from "zod";
 import { AuthorizationError, requireUser } from "@/lib/auth/helpers";
-import { checkoutFailure, type CheckoutActionResult } from "@/lib/checkout/action-types";
+import { checkoutFailure, checkoutSuccess, type CheckoutActionResult } from "@/lib/checkout/action-types";
 import { createCheckoutSchema } from "@/lib/validators/checkout";
 import { checkoutErrorMessage, createPendingOrder, createPreferenceForOrder } from "@/server/checkout/order-service";
 
@@ -55,7 +54,7 @@ export async function createCheckout(input: unknown): Promise<CheckoutActionResu
 
   revalidatePath("/cuenta/pedidos");
   revalidatePath("/carrito");
-  redirect(checkoutUrl);
+  return checkoutSuccess(checkoutUrl, orderId);
 }
 
 const retryPaymentSchema = z.object({ orderId: z.uuid("No se encontró el pedido.") });
@@ -93,5 +92,5 @@ export async function retryPayment(input: unknown): Promise<CheckoutActionResult
   }
 
   revalidatePath("/cuenta/pedidos");
-  redirect(checkoutUrl);
+  return checkoutSuccess(checkoutUrl, order.id);
 }
