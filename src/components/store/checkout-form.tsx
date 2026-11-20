@@ -74,7 +74,7 @@ export function CheckoutForm({ addresses, settings, cart }: Props) {
         : settings.shippingFlatCents;
   const totalCents = cart.subtotalCents + shippingCents;
 
-  const onSubmit = handleSubmit((values) => {
+  const onValid = (values: CheckoutFormValues) => {
     setFeedback(null);
     const isDelivery = values.shippingMethod === "delivery";
     const input = {
@@ -85,18 +85,28 @@ export function CheckoutForm({ addresses, settings, cart }: Props) {
     };
 
     startTransition(async () => {
-      const result = await createCheckout(input);
-      if (!result.ok) {
-        setFeedback(result.message ?? "No se pudo iniciar el pago. Intentá de nuevo.");
-        return;
+      try {
+        const result = await createCheckout(input);
+        if (!result.ok) {
+          setFeedback(result.message ?? "No se pudo iniciar el pago. Intentá de nuevo.");
+          return;
+        }
+        if (result.checkoutUrl) {
+          window.location.assign(result.checkoutUrl);
+          return;
+        }
+        setFeedback("No se pudo iniciar el pago. Intentá de nuevo.");
+      } catch {
+        setFeedback("No se pudo iniciar el pago. Recargá la página e intentá de nuevo.");
       }
-      if (result.checkoutUrl) {
-        window.location.assign(result.checkoutUrl);
-        return;
-      }
-      setFeedback("No se pudo iniciar el pago. Intentá de nuevo.");
     });
-  });
+  };
+
+  const onInvalid = () => {
+    setFeedback("Revisá los datos marcados en rojo y volvé a intentar.");
+  };
+
+  const onSubmit = handleSubmit(onValid, onInvalid);
 
   return (
     <form onSubmit={onSubmit} noValidate className="grid gap-8 lg:grid-cols-[1fr_340px]">

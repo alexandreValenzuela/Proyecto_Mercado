@@ -19,16 +19,20 @@ export function RetryPaymentButton({ orderId }: { orderId: string }) {
         onClick={() => {
           setFeedback(null);
           startTransition(async () => {
-            const result = await retryPayment({ orderId });
-            if (!result.ok) {
-              setFeedback(result.message ?? "No se pudo reintentar el pago. Intentá de nuevo.");
-              return;
+            try {
+              const result = await retryPayment({ orderId });
+              if (!result.ok) {
+                setFeedback(result.message ?? "No se pudo reintentar el pago. Intentá de nuevo.");
+                return;
+              }
+              if (result.checkoutUrl) {
+                window.location.assign(result.checkoutUrl);
+                return;
+              }
+              setFeedback("No se pudo reintentar el pago. Intentá de nuevo.");
+            } catch {
+              setFeedback("No se pudo reintentar el pago. Recargá la página e intentá de nuevo.");
             }
-            if (result.checkoutUrl) {
-              window.location.assign(result.checkoutUrl);
-              return;
-            }
-            setFeedback("No se pudo reintentar el pago. Intentá de nuevo.");
           });
         }}
       >
