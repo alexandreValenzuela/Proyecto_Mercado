@@ -20,8 +20,8 @@ const sections = [
   { href: "/admin/contabilidad", label: "Contabilidad", icon: CircleDollarSign, available: true },
   { href: "/admin/estadisticas", label: "Estadísticas", icon: BarChart3, available: true },
   { href: "/admin/mercado", label: "Mercado", icon: Map, available: true },
-  { href: "#", label: "Clientes", icon: UsersRound, available: false },
-  { href: "#", label: "Configuración", icon: Settings, available: false },
+  { href: "/admin/clientes", label: "Clientes", icon: UsersRound, available: true },
+  { href: "/admin/configuracion", label: "Configuración", icon: Settings, available: true },
 ] as const;
 
 export function AdminSidebar() {
