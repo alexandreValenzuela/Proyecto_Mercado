@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { CreditCard, MapPin, PackageCheck, Truck } from "lucide-react";
 import Link from "next/link";
 import { useState, useTransition } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { useForm, useWatch, type FieldErrors } from "react-hook-form";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,24 @@ type Props = {
   settings: CheckoutSettingsView;
   cart: CartSummary;
 };
+
+function collectValidationMessages(errors: FieldErrors<CheckoutFormValues>, limit = 3): string[] {
+  const messages: string[] = [];
+  const walk = (node: unknown): void => {
+    if (!node || typeof node !== "object" || messages.length >= limit) return;
+    for (const value of Object.values(node)) {
+      if (!value || typeof value !== "object") continue;
+      if ("message" in value && typeof value.message === "string" && value.message) {
+        messages.push(value.message);
+      } else {
+        walk(value);
+      }
+      if (messages.length >= limit) return;
+    }
+  };
+  walk(errors);
+  return messages;
+}
 
 function StepTitle({ step, title }: { step: number; title: string }) {
   return (
@@ -102,8 +120,13 @@ export function CheckoutForm({ addresses, settings, cart }: Props) {
     });
   };
 
-  const onInvalid = () => {
-    setFeedback("Revisá los datos marcados en rojo y volvé a intentar.");
+  const onInvalid = (errors: FieldErrors<CheckoutFormValues>) => {
+    const messages = collectValidationMessages(errors);
+    setFeedback(
+      messages.length > 0
+        ? `Revisá estos datos: ${messages.join(" · ")}`
+        : "Revisá los datos marcados en rojo y volvé a intentar.",
+    );
   };
 
   const onSubmit = handleSubmit(onValid, onInvalid);
