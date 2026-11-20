@@ -334,3 +334,17 @@ Estado final: `src/lib/mercadopago.ts` elige la URL según `MP_ENVIRONMENT`, con
 **Qué falta**
 
 - Deploy en Railway y smoke en producción siguen pendientes. El repo local tiene 15 commits sin pushear y no hay CLI de Railway en este entorno; se decidió no pushear ni desplegar.
+
+## 2026-11-20 — Autenticación: se quita Google y se endurece el rol
+
+**Qué se hizo**
+
+- Se eliminó el inicio de sesión con Google de punta a punta: provider en `src/auth.config.ts`, `googleSignInAction` en `src/server/auth/actions.ts`, botón/divider en `src/components/auth/login-form.tsx`, handler de fusión de carrito en `src/auth.ts`, variables en `.env.example` y referencias en `README.md` y `AGENTS.md`. Motivo: `AUTH_GOOGLE_ID`/`AUTH_GOOGLE_SECRET` están vacíos y el usuario decidió prescindir del proveedor en vez de configurarlo. Quedan sin efecto los pendientes de Fases 1/2 relativos a Google.
+- La tabla `accounts` y el adaptador Drizzle se mantienen (no generan migración). La fusión del carrito de invitado al loguearse sigue funcionando en el login con Credentials (`src/server/auth/actions.ts:59`).
+- `src/auth.ts`: el callback `jwt` delega en la config edge-safe y vuelve a leer `users.role` por `token.sub` en cada refresco; si cambió, actualiza `token.role`. La lectura está en `try/catch` con fallback al rol previo, así que un problema de base no rompe la autenticación. No se importó el cliente de base en `auth.config.ts` ni en `proxy.ts`.
+- `src/db/queries/catalog.ts`: `await requireAdmin()` como primera instrucción de `getAdminProductById` y `getVariantStockHistory`, que solo apoyaban en el rol verificado por sus callers.
+
+**Verificación**
+
+- `npm run typecheck`, `npm run lint`, `npm run build` y `git diff --check`: pasan; `/api/auth/providers` anuncia únicamente `credentials`.
+- Smoke HTTP real con sesión: admin (`role=admin`) → login 302 a `/admin`, `/api/auth/session` devuelve `role=admin`, `GET /admin` → 200. Usuario temporal `role=customer` creado solo para la prueba → `GET /admin` → 307 a `/403`; el usuario se borró al finalizar. No se usaron credenciales reales nuevas ni se tocó `.env.local`.

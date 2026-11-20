@@ -21,7 +21,6 @@
 ### Preguntas bloqueantes (hacelas al usuario en una sola tanda al comenzar)
 
 - URL de la base de datos de Neon (pooled y unpooled/direct) — o confirmar que el usuario las pondrá en `.env`.
-- Credenciales de Google OAuth (Client ID y Secret) o confirmar que se configuran después.
 - Cuenta de Cloudinary (cloud name, API key, API secret) o confirmar que se configuran después.
 - **MercadoPago** — antes de implementar, pedir:
   1. Access Token de **prueba** (sandbox) y de producción; Public Key solo si se usa Bricks.
@@ -66,7 +65,7 @@ Es un **proyecto escolar** de la materia de Gestión y Administración de Empres
 | UI | **Tailwind CSS** + **shadcn/ui** + `lucide-react` |
 | Base de datos | **PostgreSQL en Neon** (serverless) |
 | ORM / migraciones | **Drizzle ORM** + `drizzle-kit` |
-| Auth | **Auth.js** (`next-auth` v5): Credentials (email + contraseña) + Google, sesión JWT, adaptador Drizzle |
+| Auth | **Auth.js** (`next-auth` v5): Credentials (email + contraseña), sesión JWT, adaptador Drizzle |
 | Hash de contraseñas | `bcryptjs` |
 | Validación | **Zod** (en cliente y en servidor) |
 | Formularios | `react-hook-form` + `@hookform/resolvers` |
@@ -158,8 +157,8 @@ Convenciones: `id` uuid (default `gen_random_uuid()`), `created_at` y `updated_a
 > El esquema completo debe existir desde la primera migración para no migrar después. Incluye campos preparados para el futuro (comisión) que hoy quedan en `null`.
 
 ### Autenticación
-- `users`: `id`, `name`, `email` (unique), `email_verified`, `image`, `password_hash` (null si entró solo con Google), `role` enum (`customer` | `admin`, default `customer`), `phone`, `is_demo` bool.
-- `accounts` (requerida por el adaptador de Auth.js: proveedor Google).
+- `users`: `id`, `name`, `email` (unique), `email_verified`, `image`, `password_hash`, `role` enum (`customer` | `admin`, default `customer`), `phone`, `is_demo` bool.
+- `accounts` (la mantiene el adaptador de Auth.js; hoy no hay proveedores OAuth activos, no se eliminó para no crear una migración).
 - *(Sesión JWT, no hace falta tabla `sessions`; agregarla solo si el adaptador la exige.)*
 
 ### Catálogo
@@ -324,8 +323,6 @@ DATABASE_URL=              # Neon, conexión pooled (runtime)
 DATABASE_URL_UNPOOLED=     # Neon, conexión directa (migraciones)
 APP_URL=http://localhost:3000
 AUTH_SECRET=               # openssl rand -base64 32
-AUTH_GOOGLE_ID=
-AUTH_GOOGLE_SECRET=
 MP_ACCESS_TOKEN=           # sandbox en desarrollo
 MP_WEBHOOK_SECRET=
 NEXT_PUBLIC_MP_PUBLIC_KEY= # solo si se usa Bricks
@@ -335,8 +332,6 @@ CLOUDINARY_API_SECRET=
 ADMIN_EMAIL=
 ADMIN_INITIAL_PASSWORD=
 ```
-
-Google OAuth: registrar como URIs de redirección `http://localhost:3000/api/auth/callback/google` y `https://<dominio-railway>/api/auth/callback/google`.
 
 ---
 
@@ -372,7 +367,7 @@ Si el tiempo se acaba, se entrega lo marcado completo y se documenta en `PROGRES
 - [x] Seed demo y `db:clean-demo` (sección 11)
 
 ### Fase 2 — Autenticación y roles (P0)
-- [x] Auth.js con Credentials (registro + login, hash bcrypt) y Google
+- [x] Auth.js con Credentials (registro + login, hash bcrypt)
 - [x] Rol en el token/sesión, helpers `requireUser()` y `requireAdmin()`
 - [x] Páginas `/login` y `/registro` con validación y errores
 - [x] Middleware para `/admin/*` y `/cuenta/*`; páginas 403/404
@@ -423,7 +418,7 @@ Si el tiempo se acaba, se entrega lo marcado completo y se documenta en `PROGRES
 ### Fase 10 — Cierre y despliegue (P0)
 - [x] Clientes y configuración en admin
 - [ ] Deploy en Railway (variables de entorno, build, start, migraciones aplicadas)
-- [ ] Probar en producción: registro, Google, carrito → pago sandbox → webhook → admin ve el pedido
+- [ ] Probar en producción: registro, carrito → pago sandbox → webhook → admin ve el pedido
 - [x] Revisión responsive en celular de todo el flujo cliente
 - [x] Completar `README.md` (instalación, variables, cómo probar MP, cómo crear admin, cómo limpiar demo)
 
