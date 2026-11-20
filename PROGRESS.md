@@ -315,3 +315,22 @@ Estado final: `src/lib/mercadopago.ts` elige la URL según `MP_ENVIRONMENT`, con
 - Smoke de base de datos (solo lectura, ejecutado con `tsx` sobre el mismo armado de consulta): 20 clientes con coincidencia "a", primer registro con 14 pedidos de ingreso y 758900 centavos, y detalle con direcciones y pedidos coherentes. No se ejecutó `updateStoreSettings` contra la base para no mutar datos.
 - Smoke HTTP con `next start`: las tres rutas nuevas sirven el shell sin errores; el proxy redirige a `/login` cuando la sesión no es válida. No se logró una cookie admin sintética aceptada por Auth.js, así que el render autenticado no se verificó por HTTP en esta sesión; no se generaron credenciales ni se hizo deploy.
 - No se agregaron dependencias, no se tocó el esquema ni se crearon migraciones, no se mutó la base y no se hicieron commits.
+
+## 2026-11-20 — Fase 10: rutas públicas y revisión responsive
+
+**Qué se hizo**
+
+- Se agregaron `/nosotros` y `/cuenta/perfil` bajo `src/app/(store)/` para que hereden el layout del storefront (las URLs finales son `/nosotros` y `/cuenta/perfil`). `/nosotros` lee `getStoreSettings` y solo muestra los datos de contacto que existen; `/cuenta/perfil` exige sesión y muestra nombre, email y teléfono leídos de la base.
+- `updateProfileAction` vuelve a verificar la sesión con `requireUser()`, valida con Zod y actualiza únicamente `name` y `phone` del propio usuario. Nunca toca `role`, `email`, `passwordHash` ni `isDemo`. Revalida `/cuenta/perfil` y `/admin/clientes`.
+- El menú del navbar en celular ahora incluye las siete rutas existentes: Inicio, Catálogo, Nosotros, Carrito, Mis pedidos, Mis direcciones y Mi perfil. El footer sumó "Sobre nosotros".
+- El catálogo pasa a una columna por debajo de 380 px y mantiene 2/3/4 columnas en los breakpoints siguientes.
+
+**Verificación**
+
+- `npm run typecheck`, `npm run lint`, `npm run build` y `git diff --check`: pasan. El build figura con 35 rutas, incluidas `/nosotros` y `/cuenta/perfil`.
+- Revisión mobile: sin desbordamiento horizontal a 360 px en `/nosotros`, `/catalogo` y `/carrito` (con un ítem real en el carrito). `/checkout` autenticado queda cubierto solo por revisión estática; sin sesión redirige y no desborda.
+- No se agregaron dependencias, no se tocó el esquema ni se hicieron migraciones, no se mutó la base y no se hizo deploy.
+
+**Qué falta**
+
+- Deploy en Railway y smoke en producción siguen pendientes. El repo local tiene 15 commits sin pushear y no hay CLI de Railway en este entorno; se decidió no pushear ni desplegar.

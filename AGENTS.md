@@ -424,7 +424,7 @@ Si el tiempo se acaba, se entrega lo marcado completo y se documenta en `PROGRES
 - [x] Clientes y configuración en admin
 - [ ] Deploy en Railway (variables de entorno, build, start, migraciones aplicadas)
 - [ ] Probar en producción: registro, Google, carrito → pago sandbox → webhook → admin ve el pedido
-- [ ] Revisión responsive en celular de todo el flujo cliente
+- [x] Revisión responsive en celular de todo el flujo cliente
 - [x] Completar `README.md` (instalación, variables, cómo probar MP, cómo crear admin, cómo limpiar demo)
 
 ---
