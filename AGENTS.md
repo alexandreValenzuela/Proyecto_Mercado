@@ -365,11 +365,11 @@ Si el tiempo se acaba, se entrega lo marcado completo y se documenta en `PROGRES
 - [x] Repo en GitHub y primer commit en `main`
 
 ### Fase 1 — Base de datos completa (P0)
-- [ ] `schema.ts` con **todas** las tablas, enums, relaciones e índices de la sección 5
-- [ ] Primera migración aplicada en Neon
-- [ ] Script `db:create-admin`
-- [ ] Seed de categorías de egreso y `store_settings`
-- [ ] Seed demo y `db:clean-demo` (sección 11)
+- [x] `schema.ts` con **todas** las tablas, enums, relaciones e índices de la sección 5
+- [x] Primera migración aplicada en Neon
+- [x] Script `db:create-admin`
+- [x] Seed de categorías de egreso y `store_settings`
+- [x] Seed demo y `db:clean-demo` (sección 11)
 
 ### Fase 2 — Autenticación y roles (P0)
 - [ ] Auth.js con Credentials (registro + login, hash bcrypt) y Google
