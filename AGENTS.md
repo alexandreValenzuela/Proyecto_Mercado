@@ -372,11 +372,11 @@ Si el tiempo se acaba, se entrega lo marcado completo y se documenta en `PROGRES
 - [x] Seed demo y `db:clean-demo` (sección 11)
 
 ### Fase 2 — Autenticación y roles (P0)
-- [ ] Auth.js con Credentials (registro + login, hash bcrypt) y Google
-- [ ] Rol en el token/sesión, helpers `requireUser()` y `requireAdmin()`
-- [ ] Páginas `/login` y `/registro` con validación y errores
-- [ ] Middleware para `/admin/*` y `/cuenta/*`; páginas 403/404
-- [ ] Redirección `next` tras login
+- [x] Auth.js con Credentials (registro + login, hash bcrypt) y Google
+- [x] Rol en el token/sesión, helpers `requireUser()` y `requireAdmin()`
+- [x] Páginas `/login` y `/registro` con validación y errores
+- [x] Middleware para `/admin/*` y `/cuenta/*`; páginas 403/404
+- [x] Redirección `next` tras login
 
 ### Fase 3 — Catálogo y administración de productos (P0)
 - [ ] Layout del storefront (navbar, footer, responsive) y del admin (sidebar)

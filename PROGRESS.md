@@ -53,3 +53,29 @@
 - `npm run db:seed:demo`: 5 categorías, 16 productos, 28 variantes, 20 clientes, 180 pedidos, 351 ítems, 32 egresos, 98 visitas; `store_settings` y 6 categorías de egreso presentes.
 - `npm run db:clean-demo`: elimina únicamente datos demo y preserva `store_settings` y `expense_categories`; se volvió a sembrar después de probarlo. Sin stock negativo y 180 pedidos con comisiones en `null`.
 - `git status`: sin archivos `.env` reales versionados; solo `.env.example` está trackeado.
+
+## 2026-11-19 — Fase 2: autenticación y roles (completa)
+
+**Qué se hizo**
+
+- Se instalaron `next-auth@5.0.0-beta.32` (v5: `latest` del registro sigue siendo v4), `@auth/drizzle-adapter@1.11.3`, `zod@4.6.7`, `react-hook-form@7.92.0` y `@hookform/resolvers@7.0.7`.
+- Se separó la configuración edge-safe (`src/auth.config.ts`: providers, `pages`, `authorized`, callbacks JWT/sesión) de la instancia completa (`src/auth.ts`: adaptador Drizzle sobre `users`/`accounts`, Credentials con bcrypt, sesión JWT). El rol viaja en el token y se expone como `session.user.role`.
+- Se agregó el route handler `/api/auth/[...nextauth]`, los helpers `requireUser()`/`requireAdmin()` como punto único de verificación en servidor y el guardián `src/proxy.ts` para `/admin/*` y `/cuenta/*` (Next.js 16 reemplazó `middleware.ts` por `proxy.ts`).
+- `/registro` y `/login` usan esquemas Zod compartidos con el cliente, errores por campo sin perder los datos del formulario, rol forzado a `customer`, checkeo de email duplicado y autologin tras el registro. Google queda configurado por `AUTH_GOOGLE_ID`/`AUTH_GOOGLE_SECRET`.
+- `next` se valida con `safeNextPath` (solo rutas relativas del mismo origen) y se respeta tras login/registro. El proveedor Credentials limita intentos por IP + email y por IP en memoria, con código `rate_limit` traducido a un mensaje en español.
+- Se agregaron páginas `/403`, `/404`, `not-found.tsx` y un boundary `error.tsx` con acción de reintento.
+
+**Qué falta**
+
+- Completar `AUTH_GOOGLE_ID`/`AUTH_GOOGLE_SECRET` para probar el ingreso con Google; con las variables vacías el build y las páginas funcionan igual.
+- Ejecutar `db:create-admin` cuando se definan las credenciales del administrador (no se hizo para no inventarlas).
+- La fusión del carrito invitado al loguearse/registrarse corresponde a Fase 4 y todavía no está implementada.
+- El limitador es por proceso: en Railway con varias instancias habría que moverlo a un store compartido. Las páginas `/admin/*` se crean en Fase 3 (por ahora el guardián ya las protege).
+
+**Verificación**
+
+- `npm run typecheck`: pasa sin errores.
+- `npm run lint`: pasa sin errores ni warnings.
+- `npm run build`: pasa; `next build` muestra `ƒ Proxy (Middleware)` y `/login` y `/registro` como Partial Prerender.
+- Smoke test en servidor de producción: HTTP 200 en `/login`, `/registro`, `/403` y `/api/auth/providers` (Google y Credentials presentes); `/404` devuelve 404 con la página amigable; `/cuenta/pedidos` y `/admin` redirigen 307 a `/login?next=…` sin sesión.
+- Smoke test con JWT sintético: un `customer` que intenta `/admin` recibe 307 a `/403`; un `admin` pasa el guardián (responde 404 porque las páginas del panel son Fase 3). Ningún servidor quedó escuchando y no se ejecutaron comandos que modifiquen la base.
