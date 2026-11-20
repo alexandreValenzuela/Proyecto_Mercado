@@ -10,6 +10,7 @@ import { users } from "@/db/schema";
 import type { AuthActionResult, AuthField } from "@/lib/auth/action-types";
 import { safeNextPath } from "@/lib/auth/redirect";
 import { loginSchema, registerSchema } from "@/lib/validators/auth";
+import { mergeGuestCartIntoUserCart } from "@/server/cart/merge";
 
 function fieldErrorsFrom(error: ZodError): Partial<Record<AuthField, string>> {
   const result: Partial<Record<AuthField, string>> = {};
@@ -43,6 +44,24 @@ function isUniqueViolation(error: unknown): boolean {
   return code === "23505" || message.includes("duplicate key");
 }
 
+/** Un fallo en la fusión no debe impedir el ingreso: la cookie queda para reintentar. */
+async function mergeGuestCartForEmail(email: string): Promise<void> {
+  const [user] = await getDb()
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.email, email))
+    .limit(1);
+  if (!user) {
+    return;
+  }
+
+  try {
+    await mergeGuestCartIntoUserCart(user.id);
+  } catch (error) {
+    console.error("mergeGuestCartIntoUserCart", error);
+  }
+}
+
 export async function loginAction(input: unknown, next?: string | null): Promise<AuthActionResult> {
   const parsed = loginSchema.safeParse(input);
   if (!parsed.success) {
@@ -74,6 +93,7 @@ export async function loginAction(input: unknown, next?: string | null): Promise
     throw error;
   }
 
+  await mergeGuestCartForEmail(parsed.data.email.toLowerCase());
   return { ok: true, redirectTo };
 }
 
@@ -131,6 +151,7 @@ export async function registerAction(
     );
   }
 
+  await mergeGuestCartForEmail(email);
   return { ok: true, redirectTo };
 }
 

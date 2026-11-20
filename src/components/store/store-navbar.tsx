@@ -1,13 +1,16 @@
 import { ShoppingBag, UserRound } from "lucide-react";
 import Link from "next/link";
 import { siteConfig } from "@/config/site";
+import { getCartSummary } from "@/server/cart/actions";
 
 const links = [
   { href: "/", label: "Inicio" },
   { href: "/catalogo", label: "Catálogo" },
 ];
 
-export function StoreNavbar() {
+export async function StoreNavbar() {
+  const { itemCount } = await getCartSummary();
+
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-surface/95 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
@@ -32,16 +35,15 @@ export function StoreNavbar() {
             <UserRound className="size-5" aria-hidden />
             <span className="hidden md:inline">Mi cuenta</span>
           </Link>
-          {/* Contador real y ruta /carrito: Fase 4. Hoy no persiste nada. */}
-          <span
-            className="inline-flex items-center gap-2 rounded-xl px-2.5 py-2 text-sm text-text-muted"
-            title="El carrito se habilita en la próxima fase"
-            aria-label="Carrito, próximamente"
+          <Link
+            href="/carrito"
+            className="inline-flex items-center gap-2 rounded-xl px-2.5 py-2 text-sm text-text-muted transition-colors hover:bg-primary-soft hover:text-primary"
+            aria-label={`Carrito, ${itemCount} ${itemCount === 1 ? "producto" : "productos"}`}
           >
             <ShoppingBag className="size-5" aria-hidden />
             <span className="hidden md:inline">Carrito</span>
-            <span className="rounded-full bg-surface-muted px-1.5 text-xs">0</span>
-          </span>
+            <span className="rounded-full bg-primary-soft px-1.5 text-xs text-primary">{itemCount}</span>
+          </Link>
 
           <details className="relative sm:hidden">
             <summary className="cursor-pointer list-none rounded-xl px-2.5 py-2 text-sm font-medium text-primary [&::-webkit-details-marker]:hidden">

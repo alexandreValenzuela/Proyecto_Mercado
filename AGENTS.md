@@ -386,10 +386,10 @@ Si el tiempo se acaba, se entrega lo marcado completo y se documenta en `PROGRES
 - [x] Registro de `product_views`
 
 ### Fase 4 — Carrito (P0)
-- [ ] Carrito de invitado por cookie + carrito de usuario
-- [ ] Agregar, editar, eliminar, validación de stock y precios
-- [ ] **Fusión del carrito al loguearse/registrarse**
-- [ ] Contador en navbar y página `/carrito`
+- [x] Carrito de invitado por cookie + carrito de usuario
+- [x] Agregar, editar, eliminar, validación de stock y precios
+- [x] **Fusión del carrito al loguearse/registrarse**
+- [x] Contador en navbar y página `/carrito`
 
 ### Fase 5 — Checkout, pagos y pedidos (P0)
 - [ ] Preguntas bloqueantes de MercadoPago resueltas (sección 0)

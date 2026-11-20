@@ -1,13 +1,16 @@
 "use client";
 
 import { Info } from "lucide-react";
-import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getStockState, stockLabels } from "@/lib/catalog/stock";
 import { formatMoney } from "@/lib/money";
+import { addToCart } from "@/server/cart/actions";
 
 export type PurchaseVariant = {
   id: string;
@@ -28,11 +31,41 @@ export function ProductPurchasePanel({
 }) {
   const [selectedId, setSelectedId] = useState(variants[0]?.id ?? "");
   const [quantity, setQuantity] = useState(1);
+  const [feedback, setFeedback] = useState<{
+    status: "success" | "warning" | "error";
+    text: string;
+  } | null>(null);
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   const selected = variants.find((variant) => variant.id === selectedId) ?? variants[0];
   const priceCents = selected?.priceCents ?? basePriceCents;
   const stock = selected?.stock ?? 0;
   const stockState = getStockState(stock, selected?.lowStockThreshold);
+
+  const handleAdd = () => {
+    if (!selected) {
+      return;
+    }
+
+    setFeedback(null);
+    startTransition(async () => {
+      try {
+        const response = await addToCart(selected.id, quantity);
+        if (response.message) {
+          setFeedback({ status: response.status, text: response.message });
+        }
+        if (response.ok) {
+          router.refresh();
+        }
+      } catch {
+        setFeedback({
+          status: "error",
+          text: "No se pudo agregar el producto. Intentá de nuevo.",
+        });
+      }
+    });
+  };
 
   return (
     <div className="space-y-5">
@@ -64,6 +97,7 @@ export function ProductPurchasePanel({
                 onClick={() => {
                   setSelectedId(variant.id);
                   setQuantity(1);
+                  setFeedback(null);
                 }}
                 aria-pressed={variant.id === selected?.id}
                 className={`rounded-xl border px-3 py-2 text-sm transition-colors ${
@@ -104,14 +138,39 @@ export function ProductPurchasePanel({
         />
       </div>
 
-      {/* Fase 4: acá se conectará la acción real del carrito. Hoy no persiste nada. */}
-      <Button type="button" size="lg" className="w-full" disabled>
-        {stockState === "out" ? "Sin stock" : "Agregar al carrito"}
+      <Button
+        type="button"
+        size="lg"
+        className="w-full"
+        disabled={isPending || stockState === "out"}
+        onClick={handleAdd}
+      >
+        {isPending ? "Agregando…" : stockState === "out" ? "Sin stock" : "Agregar al carrito"}
       </Button>
+
+      {feedback ? (
+        <p
+          role={feedback.status === "error" ? "alert" : "status"}
+          className={`flex flex-wrap items-center gap-2 rounded-xl px-3 py-2 text-sm ${
+            feedback.status === "error"
+              ? "bg-danger/10 text-danger"
+              : feedback.status === "warning"
+                ? "bg-warning/10 text-warning"
+                : "bg-primary-soft text-primary"
+          }`}
+        >
+          {feedback.text}
+          {feedback.status === "success" ? (
+            <Link href="/carrito" className="font-semibold underline underline-offset-2">
+              Ver carrito
+            </Link>
+          ) : null}
+        </p>
+      ) : null}
+
       <p className="flex items-start gap-2 rounded-xl bg-surface-muted px-3 py-2 text-xs text-text-muted">
         <Info className="mt-0.5 size-4 shrink-0" aria-hidden />
-        El carrito se habilita en la próxima fase. Por ahora podés explorar el catálogo y los
-        detalles de cada producto.
+        El stock y el precio se confirman en el servidor antes de guardar el producto en tu carrito.
       </p>
     </div>
   );

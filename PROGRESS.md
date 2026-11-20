@@ -106,3 +106,28 @@
 - Smoke de base de datos (solo lectura): 5 categorías, 16 productos activos, 28 variantes activas y 1 fila de `store_settings`; top por ventas reales coherente y detalle/filtro de `camiseta-basica-algodon` correctos.
 - Smoke HTTP en servidor de producción: 200 en `/`, `/catalogo`, `/catalogo?q=camiseta`, `/producto/camiseta-basica-algodon`, `/login` y `/registro`; `/admin` redirige 307 a login sin sesión. El inicio renderiza productos reales con imágenes.
 - No se ejecutaron comandos que modifiquen la base, no se crearon archivos de credenciales y no se hicieron commits.
+
+## 2026-11-19 — Fase 4: carrito (completa)
+
+**Qué se hizo**
+
+- Identidad del carrito: cookie httpOnly `cart_token` (30 días, `sameSite: lax`, `secure` en producción) para invitados y `session.user.id` para usuarios. La cookie se crea solo en mutaciones, nunca durante el render. `getCartIdentity()` resuelve la identidad sin escribir cookies en lectura.
+- `src/db/queries/cart.ts` centraliza todo el acceso: find-or-create con tolerancia a carreras, ítems con relaciones anidadas (variante → producto → imagen), y queries de ownership que filtran por `(itemId, cartId)` para impedir tocar carritos ajenos.
+- Mutaciones en `src/server/cart/actions.ts` (`addToCart`, `updateCartItem`, `removeCartItem`): validación Zod en servidor, precio y stock recalculados desde la BD, cap de cantidad al stock disponible y `revalidatePath` para refrescar el contador. `getCartSummary()` recalcula el subtotal desde la BD, guarda un snapshot de precios en cookie para avisar cambios y expone advertencias de stock/precio.
+- Fusión invitado → usuario en `src/server/cart/merge.ts`: transacción única con `FOR UPDATE`, suma de cantidades capeadas por stock, borrado del carrito invitado y limpieza de cookie. Idempotente; aviso de una sola vez si se perdió cantidad por stock. Se invoca desde login/registro (Credentials) y desde el evento `signIn` de Auth.js (Google), con manejo de errores que no bloquea el ingreso.
+- UI: `/carrito` con estado vacío, resumen, advertencias y enlace "Continuar al pago" a `/checkout` (ruta de Fase 5, hoy 404); filas editables con react-hook-form + `zodResolver`; integración real del botón "Agregar al carrito" en el detalle de producto; contador navegable en el navbar. Todo en español rioplatense y mobile-first.
+- Fix de PPR: `auth()` genera un token CSRF aleatorio vía `crypto.getRandomValues()` en cada llamada sin cookie; al pasar el navbar a leer sesión eso rompía el prerender del shell con `cacheComponents: true`. Se agregó `await connection()` en `getCartSummary()` (el navbar y `/carrito` ya tenían `<Suspense>`), confirmado por la doc actual de Next.js 16.
+
+**Qué falta**
+
+- `/checkout` es Fase 5: el enlace "Continuar al pago" lleva a una ruta que todavía no existe (404 esperado).
+- El merge depende de `DATABASE_URL` con pool WebSocket para la transacción (`getTransactionalDb()`), ya usada en Fase 3; no se probó end-to-end contra la BD por la restricción de no mutar datos en esta sesión.
+- El directo de Google usa el evento `signIn`; si en el futuro se migra a un flujo que no lo dispare, hay que mover el merge al callback.
+
+**Verificación**
+
+- Documentación verificada vía Context7: `cookies()` async y escribible solo en Server Actions/Route Handlers, `revalidatePath`, `onConflictDoUpdate` de Drizzle, `zodResolver` con Zod 4 y `connection()` para PPR.
+- `npm run typecheck`, `npm run lint` y `npm run build`: pasan sin errores. `next build` reporta `/carrito` como Partial Prerender.
+- Smoke de base de datos (solo lectura): 0 carritos y 0 ítems (sin mutaciones), 16 productos demo, 28 variantes demo, 20 clientes demo y 180 pedidos demo intactos.
+- Smoke HTTP en servidor de producción: 200 en `/carrito` (estado vacío y contador "Carrito, 0 productos"), `/` (contador presente) y `/producto/camiseta-basica-algodon` (botón real, sin placeholder). `/checkout` devuelve 404 por Fase 5. Log del servidor sin errores de prerender.
+- No se ejecutaron comandos que modifiquen la base, no se crearon archivos de credenciales y no se hicieron commits.

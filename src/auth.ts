@@ -12,6 +12,7 @@ import {
   getRequestIp,
 } from "@/lib/auth/rate-limit";
 import { loginSchema } from "@/lib/validators/auth";
+import { mergeGuestCartIntoUserCart } from "@/server/cart/merge";
 
 /** Instancia completa: adaptador Drizzle + Credentials + la config edge-safe. */
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -66,4 +67,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
+  events: {
+    // Credentials ya fusiona desde las actions; acá cubrimos el callback de Google.
+    async signIn({ user, account }) {
+      if (account?.provider !== "google" || !user.id) {
+        return;
+      }
+      try {
+        await mergeGuestCartIntoUserCart(user.id);
+      } catch (error) {
+        console.error("mergeGuestCartIntoUserCart (google)", error);
+      }
+    },
+  },
 });
