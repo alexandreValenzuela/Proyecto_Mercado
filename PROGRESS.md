@@ -367,3 +367,22 @@ Estado final: `src/lib/mercadopago.ts` elige la URL según `MP_ENVIRONMENT`, con
 - `src/components/admin/admin-topbar.tsx`: nuevo enlace "Volver a la tienda" con ícono de tienda, al lado de "Cerrar sesión". Usa `buttonVariants` para mantener el estilo de los botones existentes y en pantallas chicas queda solo el ícono (con `title` accesible).
 - README: el paso de variables de Railway ahora indica el *Raw Editor* y la opción de `APP_URL=https://${{RAILWAY_PUBLIC_DOMAIN}}`.
 - Verificación: typecheck, lint, build (35 rutas) y `git diff --check` pasan. Se generó el bloque de 13 variables desde `.env.local` (sin los dos keys vacíos de Google, con `MP_ENVIRONMENT=test`) en el portapapeles y en `%TEMP%\nudo-railway-env.txt`; los valores no se imprimieron en el chat ni se versionaron.
+
+## 2026-11-20 — Fix: el checkout no abría MercadoPago desde el celular
+
+**Qué se hizo**
+
+- `src/server/checkout/actions.ts`: `createCheckout` y `retryPayment` ya no llaman a `redirect(checkoutUrl)` con una URL externa; devuelven `checkoutSuccess(checkoutUrl, orderId)` y mantienen los `revalidatePath`.
+- `src/lib/checkout/action-types.ts`: `CheckoutActionResult` incorpora `checkoutUrl: string | null`, con el helper `checkoutSuccess()` y `checkoutUrl: null` en los fallos.
+- `src/components/store/checkout-form.tsx` y `src/components/store/retry-payment-button.tsx`: ante un resultado exitoso hacen `window.location.assign(result.checkoutUrl)`; si no hay URL muestran el mensaje de error en español que ya existía.
+
+**Por qué**
+
+- Desde el celular, al apretar "Pagar con MercadoPago" se creaban el pedido y la preferencia (pedido 361 con `mp_preference_id`), pero el navegador nunca salía del checkout: se quedaba en "Generando el pago…". La URL sandbox respondía 302 y era accesible, así que el problema no era de MP.
+- La documentación de Next.js 16 indica que `redirect()` dentro de un Server Action hace navegación client-side cuando hay JavaScript, y que para URLs externas corresponde usar `window.location`. El salto client-side a `sandbox_init_point` se trababa en mobile.
+
+**Verificación**
+
+- `npm run typecheck`, `npm run lint`, `npm run build` (35 rutas) y `git diff --check`: pasan.
+- Logs de Railway sin errores de checkout; solo un `CredentialsSignin` de una prueba de contraseña y el `webhook: firma inválida` de una sonda deliberada sin firma.
+- Falta: redesplegar y repetir la compra desde el celular para confirmar que abre el checkout de MP.
