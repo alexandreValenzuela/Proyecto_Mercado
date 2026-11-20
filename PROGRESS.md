@@ -410,3 +410,19 @@ Estado final: `src/lib/mercadopago.ts` elige la URL según `MP_ENVIRONMENT`, con
 - `src/components/store/checkout-form.tsx`: `onInvalid` ahora recorre el `FieldErrors` de react-hook-form y muestra hasta 3 mensajes reales de Zod en el cartel al lado del botón ("Revisá estos datos: …"), con el mensaje genérico como fallback.
 - Motivo: hacía falta identificar qué campo rechaza el esquema sin depender de ver los campos en rojo en el celular.
 - Verificación: typecheck, lint, build (35 rutas) y `git diff --check` pasan. Falta: desplegar y repetir la prueba.
+
+## 2026-11-20 — Fix: el checkout rechazaba las direcciones guardadas
+
+**Qué se hizo**
+
+- `src/lib/validators/checkout.ts`: el esquema base del formulario ya no usa `addressInputSchema.partial()` para `newAddress`. Lo reemplaza `checkoutNewAddressSchema`, que solo exige el tipo de cada campo. Las reglas completas (nombre, teléfono, calle, etc.) se aplican en el `superRefine` existente únicamente cuando `selectedAddress === "new"`. El servidor sigue validando con `createCheckoutSchema`.
+
+**Por qué**
+
+- El usuario reportó: con dirección guardada, el checkout mostraba "Ingresá el nombre de quien recibe. · Ingresá un teléfono válido. · Ingresá la calle."; con dirección nueva completa, funcionaba.
+- El formulario siempre envía los inputs de dirección nueva con strings vacíos (`recipientName: ""`, etc.), aunque se seleccione una dirección guardada. `.partial()` vuelve los campos *opcionales*, pero `z.string().trim().min(2)` sigue rechazando `""`. Por eso la validación base fallaba aunque la dirección elegida fuera válida. Era un bug del esquema, no de MP ni del celular.
+
+**Verificación**
+
+- `npm run typecheck`, `npm run lint`, `npm run build` (35 rutas) y `git diff --check`: pasan.
+- Falta: desplegar y confirmar en el celular que una dirección guardada permite llegar al checkout de MP.
