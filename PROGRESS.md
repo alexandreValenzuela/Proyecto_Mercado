@@ -426,3 +426,21 @@ Estado final: `src/lib/mercadopago.ts` elige la URL según `MP_ENVIRONMENT`, con
 
 - `npm run typecheck`, `npm run lint`, `npm run build` (35 rutas) y `git diff --check`: pasan.
 - Falta: desplegar y confirmar en el celular que una dirección guardada permite llegar al checkout de MP.
+
+## 2026-11-20 — Imágenes reales para los 16 productos demo
+
+**Qué se hizo**
+
+- `next.config.ts`: se agregaron tres hosts remotos para `next/image`: `thumbs.dreamstime.com`, `acdn-us.mitiendanube.com` y `encrypted-tbn0.gstatic.com`. Se conservaron `res.cloudinary.com` y `placehold.co`.
+- `scripts/seed-demo.mjs`: nuevo mapa `DEMO_IMAGE_URLS` con las 16 URLs provistas por el usuario, claveada por `slug`. El generador de imágenes usa ese mapa con el placeholder original como fallback. Verificado: 16 slugs en el mapa, 16 en `productDefs`, cero diferencias en ambos sentidos.
+- Base de datos de producción: las 16 filas de `product_images` se actualizaron por slug (script temporal vía `railway run`, ya eliminado). Verificado: `MATCHED_IMAGE_ROWS=16`, `UPDATED=16`, `URLS_MATCH=true`, `PLACEHOLDERS_LEFT=0`.
+
+**Por qué**
+
+- Reemplazar los placeholders `placehold.co` por fotos reales en catálogo, detalle y carrito. El mapeo por slug evita el error de orden del seed (ítems 6 y 7 invertidos respecto de la numeración del usuario).
+
+**Verificación**
+
+- `npm run typecheck`, `npm run lint`, `npm run build` (35 rutas) y `git diff --check`: pasan.
+- Las 16 URLs responden HTTP 200 con content-type de imagen. Tamaños: Dreamstime 800×800, Tiendanube 1024×1024; varias miniaturas de Google de 203–253 px pueden verse borrosas en grande.
+- Falta: desplegar el cambio de hosts y confirmar en producción que el optimizador de Next.js (`/_next/image`) sirve las imágenes, y revisar visualmente el resultado.
