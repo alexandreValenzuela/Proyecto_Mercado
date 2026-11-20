@@ -444,3 +444,10 @@ Estado final: `src/lib/mercadopago.ts` elige la URL según `MP_ENVIRONMENT`, con
 - `npm run typecheck`, `npm run lint`, `npm run build` (35 rutas) y `git diff --check`: pasan.
 - Las 16 URLs responden HTTP 200 con content-type de imagen. Tamaños: Dreamstime 800×800, Tiendanube 1024×1024; varias miniaturas de Google de 203–253 px pueden verse borrosas en grande.
 - Desplegado (deploy `3cdddf8c`). Verificado en producción: `/_next/image?url=…&w=640&q=75` devuelve 200 `image/jpeg` para las tres hosts nuevas (Dreamstime 10 KB, Tiendanube 28 KB, Google 13 KB), y `/catalogo` devuelve 200 con URLs optimizadas de esos tres dominios (ya no aparece `placehold.co`). Falta: revisión visual final por parte del usuario.
+
+## 2026-11-20 — Informe técnico y de producto
+
+- `INFORME.md`: informe completo de la aplicación con dos miradas (técnica y de usuario), métricas reales de producción, estado de entrega, hallazgos priorizados y checklist de cierre.
+- Fuentes: lectura directa del código por dos agentes de mapeo, consultas a Neon en producción y sweep HTTP de 19 rutas.
+- Conclusión: la app está terminada y desplegada; el único bloqueo funcional sigue siendo la prueba de pago sandbox y su webhook. Se documentó también la deuda (sin tests/CI, docs desactualizados, rate limit en memoria, calidad de 7 imágenes).
+- Nota: los agentes no pudieron consultar Railway y sus hallazgos sobre deploys quedaron desactualizados; el informe usa la evidencia real verificada por el orquestador (deploy `3cdddf8c`, pedidos #361–#364, optimizador de imágenes).
