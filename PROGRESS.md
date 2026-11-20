@@ -185,3 +185,29 @@
 - Smoke de base de datos (solo lectura): 180 pedidos, 351 ítems, 346 entradas de historial, 166 eventos de pago, 0 pedidos en revisión manual, 0 movimientos de cancelación y 0 variantes con stock negativo. Los datos demo quedaron intactos.
 - Smoke HTTP en servidor de producción: `/admin/pedidos` y `/admin/pedidos/<id>` redirigen 307 a `/login?next=…` sin sesión; el servidor se detuvo al finalizar.
 - `git status`: solo archivos de código del panel de pedidos, `PROGRESS.md` y `AGENTS.md`. No se crearon credenciales, no se mutó la base, no se llamó a MercadoPago y no se hicieron commits.
+
+## 2026-11-19 — Fase 7: contabilidad (completa)
+
+**Qué se hizo**
+
+- Se agregó `src/server/accounting/queries.ts` con funciones puras que reciben un rango de fechas: balance del período, costo de ventas y margen bruto, egresos por categoría, movimientos unificados y listados de egresos/categorías. Cada query llama a `requireAdmin()` además del proxy.
+- Los ingresos se derivan de pedidos en `paid`, `preparing`, `shipped` y `delivered`, usando `paid_at` como fecha contable; `cancelled` y `pending_payment` quedan excluidos. El día contable se calcula en SQL con `AT TIME ZONE 'America/Argentina/Buenos_Aires'`. Los límites del rango usan `-03:00` porque Argentina no tiene horario de verano.
+- El margen bruto es ingresos menos `SUM(unit_cost_cents * quantity)` de los ítems vendidos, absoluto y en porcentaje. Cuando algún ítem vendido no tiene costo, se muestra la advertencia "Margen incompleto" en lugar de asumir costo 0. Los campos de comisión siguen sin usarse.
+- `/admin/contabilidad` muestra KPIs del período (día, semana, mes, año o rango libre), balance, costo de ventas, margen, gráfico de egresos por categoría y tabla unificada de ingresos/egresos ordenable por fecha con enlaces al pedido.
+- `/admin/contabilidad/egresos` y `/admin/contabilidad/categorias` implementan el CRUD: alta, edición y baja de egresos (hard delete) y alta, edición y desactivación de categorías (baja lógica para no romper egresos existentes). Importes escritos en pesos y convertidos a centavos en el servidor, con Zod y `requireAdmin()` en cada action.
+- Se conectó el enlace "Contabilidad" del sidebar, se agregó un `loading.tsx` y se instaló `recharts@3.11.0` (ya figuraba en el stack aprobado; sin nuevas dependencias fuera de `AGENTS.md`).
+- Se actualizaron los casilleros de Fase 7 en `AGENTS.md`.
+
+**Qué falta**
+
+- Conectar los KPIs de contabilidad con el dashboard general (Fase 8) si se decide reutilizar las mismas funciones.
+- Probar en vivo la creación/edición de egresos con una sesión de administrador; en esta sesión no se crearon credenciales ni se mutó la base.
+- Los egresos demo siguen marcados como `is_demo = true` y `db:clean-demo` continúa borrándolos sin tocar las 6 categorías reales.
+
+**Verificación**
+
+- Documentación actual verificada vía Context7: `sql<T>` y agregados de Drizzle, componentes de Recharts 3 y Server Actions / `searchParams` async de Next.js 16.
+- `npm run typecheck`, `npm run lint` y `npm run build`: pasan sin errores. `next build` reporta las tres rutas nuevas como Partial Prerender.
+- Smoke de base de datos (solo lectura): 180 pedidos (158 con estados de ingreso y 22 excluidos), 158 pedidos con `paid_at` para calcular ingresos, 9.631.300 centavos de ingresos versus 1.279.700 centavos de pedidos excluidos, 32 egresos demo por 1.649.755 centavos, 6 categorías reales, 308 ítems vendidos y 0 con costo faltante. Las consultas con `AT TIME ZONE` devuelven días de noviembre de 2026 coherentes con los datos sembrados.
+- Smoke HTTP en servidor de producción: `/admin/contabilidad`, `/admin/contabilidad/egresos` y `/admin/contabilidad/categorias` redirigen 307 a `/login?next=…` sin sesión; el servidor se detuvo y el puerto quedó libre.
+- `git status`: solo código de contabilidad, `package.json`/`package-lock.json` por Recharts, `PROGRESS.md`, `AGENTS.md` y el enlace del sidebar. No se crearon credenciales, no se mutó la base, no se llamó a MercadoPago y no se hicieron commits.

@@ -405,9 +405,9 @@ Si el tiempo se acaba, se entrega lo marcado completo y se documenta en `PROGRES
 - [x] Cancelación con devolución de stock
 
 ### Fase 7 — Contabilidad (P1)
-- [ ] CRUD de categorías de egreso y de egresos
-- [ ] Balance por período, costo de ventas y margen bruto
-- [ ] Gráficos y tabla unificada de movimientos
+- [x] CRUD de categorías de egreso y de egresos
+- [x] Balance por período, costo de ventas y margen bruto
+- [x] Gráficos y tabla unificada de movimientos
 
 ### Fase 8 — Dashboard y estadísticas (P1)
 - [ ] KPIs y gráfico del dashboard
