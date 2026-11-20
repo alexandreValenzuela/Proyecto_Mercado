@@ -361,3 +361,9 @@ Estado final: `src/lib/mercadopago.ts` elige la URL según `MP_ENVIRONMENT`, con
 
 - `npm run typecheck`, `npm run lint`, `npm run build` y `git diff --check`: pasan.
 - Smoke HTTP con el build final: invitado → sin link admin; admin → link admin presente y `GET /admin` → 200; cliente temporal → sin link admin y `GET /admin` → 307 (usuario borrado después). Log del servidor limpio, sin errores de prerender.
+
+## 2026-11-20 — Botón para volver al storefront desde el admin
+
+- `src/components/admin/admin-topbar.tsx`: nuevo enlace "Volver a la tienda" con ícono de tienda, al lado de "Cerrar sesión". Usa `buttonVariants` para mantener el estilo de los botones existentes y en pantallas chicas queda solo el ícono (con `title` accesible).
+- README: el paso de variables de Railway ahora indica el *Raw Editor* y la opción de `APP_URL=https://${{RAILWAY_PUBLIC_DOMAIN}}`.
+- Verificación: typecheck, lint, build (35 rutas) y `git diff --check` pasan. Se generó el bloque de 13 variables desde `.env.local` (sin los dos keys vacíos de Google, con `MP_ENVIRONMENT=test`) en el portapapeles y en `%TEMP%\nudo-railway-env.txt`; los valores no se imprimieron en el chat ni se versionaron.

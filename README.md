@@ -108,9 +108,9 @@ El servicio Next.js se despliega en Railway y la base queda en Neon. No hace fal
 1. Creá el servicio desde este repositorio. Si Railway no detecta el stack, configurá manualmente:
    - Build command: `npm run build`
    - Start command: `npm run start`
-2. Cargá **todas** las variables de entorno del service, con los valores finales:
+2. Cargá **todas** las variables de entorno del service, con los valores finales. En Railway entrá a *Variables → Raw Editor* y pegá el bloque `KEY=VALUE` completo (también podés agregarlas una por una):
    - `DATABASE_URL` (pooled de Neon) y `DATABASE_URL_UNPOOLED` (directa de Neon). La segunda es la que usa `npm run db:migrate`.
-   - `APP_URL` = la URL final de Railway, por ejemplo `https://nudo-production.up.railway.app`, sin barra final. Tiene que ser pública y accesible desde Internet para que MP pueda llamar al webhook.
+   - `APP_URL` podés dejarlo como `https://${{RAILWAY_PUBLIC_DOMAIN}}` para que Railway resuelva el dominio automáticamente, o poner la URL final, por ejemplo `https://nudo-production.up.railway.app`, sin barra final. Tiene que ser pública y accesible desde Internet para que MP pueda llamar al webhook.
    - `AUTH_SECRET`.
    - `MP_ACCESS_TOKEN`, `MP_ENVIRONMENT`, `MP_WEBHOOK_SECRET`, `NEXT_PUBLIC_MP_PUBLIC_KEY` si corresponde.
    - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`.
