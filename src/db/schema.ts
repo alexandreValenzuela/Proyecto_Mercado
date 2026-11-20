@@ -4,12 +4,12 @@
  * Convenciones: tablas/columnas en snake_case, ids uuid con gen_random_uuid(),
  * dinero en centavos (integer) y timestamps con zona horaria.
  *
- * Auth.js: con sesión JWT y providers Credentials + Google no se necesitan las
- * tablas `sessions` ni `verificationTokens` (la documentación oficial las marca
- * como opcionales: solo para database sessions y Magic Link respectivamente).
- * Sí se necesita `accounts` para vincular el login de Google. Los nombres de
+ * Auth.js: con sesión JWT y provider Credentials no se necesitan las tablas
+ * `sessions` ni `verificationTokens` (la documentación oficial las marca como
+ * opcionales: solo para database sessions y Magic Link respectivamente).
+ * Se conserva `accounts` porque la espera @auth/drizzle-adapter. Los nombres de
  * propiedades de TypeScript de `users` y `accounts` coinciden con las claves
- * que espera @auth/drizzle-adapter, mientras las columnas SQL son snake_case.
+ * que espera el adaptador, mientras las columnas SQL son snake_case.
  */
 import { relations, sql } from "drizzle-orm";
 import {

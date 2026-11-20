@@ -12,7 +12,6 @@ import {
   getRequestIp,
 } from "@/lib/auth/rate-limit";
 import { loginSchema } from "@/lib/validators/auth";
-import { mergeGuestCartIntoUserCart } from "@/server/cart/merge";
 
 /** Instancia completa: adaptador Drizzle + Credentials + la config edge-safe. */
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -45,7 +44,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           .where(eq(users.email, parsed.data.email))
           .limit(1);
 
-        // Los usuarios que entraron solo con Google no tienen password_hash.
+        // Los usuarios sin password_hash no pueden ingresar con credenciales.
         if (!user?.passwordHash) {
           return null;
         }
@@ -67,17 +66,30 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
-  events: {
-    // Credentials ya fusiona desde las actions; acá cubrimos el callback de Google.
-    async signIn({ user, account }) {
-      if (account?.provider !== "google" || !user.id) {
-        return;
+  callbacks: {
+    ...authConfig.callbacks,
+    async jwt(params) {
+      // La config edge-safe pone los claims base; acá podemos consultar la BD.
+      const token = (await authConfig.callbacks?.jwt?.(params)) ?? params.token;
+
+      if (token.sub) {
+        try {
+          const [currentUser] = await getDb()
+            .select({ role: users.role })
+            .from(users)
+            .where(eq(users.id, token.sub))
+            .limit(1);
+
+          if (currentUser && currentUser.role !== token.role) {
+            token.role = currentUser.role;
+          }
+        } catch (error) {
+          // Un fallo de base no debe romper la sesión: se conserva el rol previo.
+          console.error("No se pudo refrescar el rol del token", error);
+        }
       }
-      try {
-        await mergeGuestCartIntoUserCart(user.id);
-      } catch (error) {
-        console.error("mergeGuestCartIntoUserCart (google)", error);
-      }
+
+      return token;
     },
   },
 });

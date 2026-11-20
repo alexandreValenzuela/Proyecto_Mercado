@@ -2,18 +2,17 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { googleSignInAction, loginAction } from "@/server/auth/actions";
+import { loginAction } from "@/server/auth/actions";
 import { loginSchema, type LoginInput } from "@/lib/validators/auth";
 
 export function LoginForm({ next }: { next: string | null }) {
   const router = useRouter();
   const [serverMessage, setServerMessage] = useState<string | null>(null);
-  const [isGooglePending, startGoogleTransition] = useTransition();
   const {
     register,
     handleSubmit,
@@ -91,27 +90,6 @@ export function LoginForm({ next }: { next: string | null }) {
           {isSubmitting ? "Ingresando…" : "Ingresar"}
         </Button>
       </form>
-
-      <div className="flex items-center gap-3 text-xs text-text-muted">
-        <span className="h-px flex-1 bg-border" />
-        <span>o</span>
-        <span className="h-px flex-1 bg-border" />
-      </div>
-
-      <Button
-        type="button"
-        variant="outline"
-        size="lg"
-        className="w-full"
-        disabled={isGooglePending}
-        onClick={() => {
-          startGoogleTransition(() => {
-            void googleSignInAction(next);
-          });
-        }}
-      >
-        {isGooglePending ? "Conectando…" : "Continuar con Google"}
-      </Button>
     </div>
   );
 }

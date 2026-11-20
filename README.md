@@ -6,7 +6,7 @@ Plataforma web de e-commerce para un emprendimiento, con foco en gestión contab
 
 - Node.js 24 o superior y npm 11 o superior.
 - Una base de datos PostgreSQL en Neon (URLs pooled y directa).
-- Cuentas de Google OAuth, Cloudinary y MercadoPago para habilitar esos módulos.
+- Cuentas de Cloudinary y MercadoPago para habilitar esos módulos.
 - Opcional: Cloudflared o Ngrok para exponer el webhook cuando se prueba en local.
 
 ## Instalación
@@ -31,15 +31,12 @@ Copiá `.env.example` a `.env.local` y completá los valores según el entorno.
 | `DATABASE_URL_UNPOOLED` | Conexión directa de Neon, usada por drizzle-kit en las migraciones. |
 | `APP_URL` | URL pública de la app. En local, `http://localhost:3000`; en desarrollo con túnel, la URL del túnel; en producción, la URL final de Railway. Define las `back_urls` y la `notification_url` de MercadoPago. |
 | `AUTH_SECRET` | Secreto de Auth.js; generarlo con `openssl rand -base64 32`. |
-| `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` | Credenciales de Google OAuth. Con las variables vacías el login con Google no está disponible, pero el resto funciona. |
 | `MP_ACCESS_TOKEN` | Access token de MercadoPago: de **Test** para desarrollar y probar, de producción solo en el deploy final. |
 | `MP_ENVIRONMENT` | `test` (default) o `production`. Con credenciales de Test **tiene** que ser `test` para usar `sandbox_init_point`; para producción hay que declarar explícitamente `production` y usar `init_point`. No se infiere del prefijo del token: MP devuelve ambas URLs y el prefijo de Test puede variar. |
 | `MP_WEBHOOK_SECRET` | Secreto de firma del webhook, tomado del panel de desarrolladores de MP. Sin él, la notificación se rechaza. |
 | `NEXT_PUBLIC_MP_PUBLIC_KEY` | Solo si se usa Bricks (este proyecto usa Checkout Pro, así que no hace falta). |
 | `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | Subida firmada de imágenes desde el admin. Sin credenciales, la subida muestra un error claro. |
 | `ADMIN_EMAIL`, `ADMIN_INITIAL_PASSWORD` | Primer usuario administrador; los lee el script `db:create-admin`. La contraseña debe tener al menos 8 caracteres. |
-
-Para Google OAuth registrá como URI de redirección `http://localhost:3000/api/auth/callback/google` y, en producción, `https://<dominio-railway>/api/auth/callback/google`.
 
 ## Scripts
 
@@ -114,18 +111,17 @@ El servicio Next.js se despliega en Railway y la base queda en Neon. No hace fal
 2. Cargá **todas** las variables de entorno del service, con los valores finales:
    - `DATABASE_URL` (pooled de Neon) y `DATABASE_URL_UNPOOLED` (directa de Neon). La segunda es la que usa `npm run db:migrate`.
    - `APP_URL` = la URL final de Railway, por ejemplo `https://nudo-production.up.railway.app`, sin barra final. Tiene que ser pública y accesible desde Internet para que MP pueda llamar al webhook.
-   - `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`.
+   - `AUTH_SECRET`.
    - `MP_ACCESS_TOKEN`, `MP_ENVIRONMENT`, `MP_WEBHOOK_SECRET`, `NEXT_PUBLIC_MP_PUBLIC_KEY` si corresponde.
    - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`.
    - `ADMIN_EMAIL`, `ADMIN_INITIAL_PASSWORD`.
-3. En Google Cloud, agregá `https://<dominio-railway>/api/auth/callback/google` a los URIs de redirección autorizados.
-4. En el panel de MercadoPago registrá `https://<dominio-railway>/api/webhooks/mercadopago` como URL de notificación y cargá el mismo secreto que `MP_WEBHOOK_SECRET`. Si las credenciales son de Test, `MP_ENVIRONMENT` sigue siendo `test`; el paso a producción requiere cambiar credenciales **y** setear `MP_ENVIRONMENT=production` explícitamente.
-5. Desplegá y esperá a que el build termine con `npm run build`.
-6. Ejecutá como comando one-off (Railway run / Railway Shell) `npm run db:migrate` **después** del primer deploy. Es la forma de aplicar las migraciones en Neon desde el entorno donde están las variables. Repetilo después de cada deploy que traiga migraciones nuevas.
-7. Ejecutá también como one-off `npm run db:create-admin` para crear el administrador inicial. `npm run db:seed:demo` es opcional y conviene usarlo solo en un entorno de prueba, nunca sobre datos reales.
-8. Verificación de salud:
+3. En el panel de MercadoPago registrá `https://<dominio-railway>/api/webhooks/mercadopago` como URL de notificación y cargá el mismo secreto que `MP_WEBHOOK_SECRET`. Si las credenciales son de Test, `MP_ENVIRONMENT` sigue siendo `test`; el paso a producción requiere cambiar credenciales **y** setear `MP_ENVIRONMENT=production` explícitamente.
+4. Desplegá y esperá a que el build termine con `npm run build`.
+5. Ejecutá como comando one-off (Railway run / Railway Shell) `npm run db:migrate` **después** del primer deploy. Es la forma de aplicar las migraciones en Neon desde el entorno donde están las variables. Repetilo después de cada deploy que traiga migraciones nuevas.
+6. Ejecutá también como one-off `npm run db:create-admin` para crear el administrador inicial. `npm run db:seed:demo` es opcional y conviene usarlo solo en un entorno de prueba, nunca sobre datos reales.
+7. Verificación de salud:
    - `GET /` responde 200 y muestra la marca Nudo y el catálogo.
-   - `GET /api/auth/providers` responde 200 y lista Credentials y Google.
+   - `GET /api/auth/providers` responde 200 y lista Credentials.
    - Ingresás con el administrador y `/admin` carga el dashboard con datos reales.
    - En `/admin/pedidos` se ve el pedido generado en el smoke de pago y el webhook aparece como entregado en el panel de MP.
 

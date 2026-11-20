@@ -10,6 +10,7 @@ import {
   storeSettings,
   users,
 } from "@/db/schema";
+import { requireAdmin } from "@/lib/auth/helpers";
 import type { AdminProductQuery, CatalogQuery } from "@/lib/validators/catalog";
 
 export type CatalogProduct = {
@@ -208,6 +209,8 @@ export async function getProductBySlug(slug: string) {
 }
 
 export async function getAdminProductById(id: string) {
+  await requireAdmin();
+
   const db = getDb();
   return db.query.products.findFirst({
     where: eq(products.id, id),
@@ -226,6 +229,8 @@ export async function getStoreSettings() {
 }
 
 export async function getVariantStockHistory(variantId: string, limit = 20) {
+  await requireAdmin();
+
   const db = getDb();
   return db
     .select({

@@ -154,7 +154,3 @@ export async function registerAction(
   await mergeGuestCartForEmail(email);
   return { ok: true, redirectTo };
 }
-
-export async function googleSignInAction(next?: string | null): Promise<void> {
-  await signIn("google", { redirectTo: safeNextPath(next) });
-}
