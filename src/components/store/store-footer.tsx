@@ -1,4 +1,5 @@
 import { Mail, MessageCircle } from "lucide-react";
+import Link from "next/link";
 import { siteConfig } from "@/config/site";
 import { getStorefrontSettings } from "@/server/catalog";
 
@@ -13,6 +14,12 @@ export async function StoreFooter() {
           <p className="mt-2 max-w-xs text-sm text-text-muted">
             Productos elegidos con cariño, envíos a todo el país y retiro en persona.
           </p>
+          <Link
+            href="/nosotros"
+            className="mt-3 inline-block text-sm font-semibold text-primary underline-offset-2 hover:underline"
+          >
+            Sobre nosotros
+          </Link>
         </div>
         <div>
           <p className="text-sm font-semibold text-text">Contacto</p>

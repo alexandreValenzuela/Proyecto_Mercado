@@ -38,7 +38,7 @@ function pageHref(query: CatalogResolvedQuery, page: number): string {
 
 function CatalogSkeleton() {
   return (
-    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-4 min-[380px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
       {[0, 1, 2, 3, 4, 5, 6, 7].map((index) => (
         <div key={index} className="h-72 animate-pulse rounded-2xl bg-surface-muted" />
       ))}
@@ -78,7 +78,7 @@ async function CatalogContent({ query }: { query: CatalogResolvedQuery }) {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 min-[380px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
           {items.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

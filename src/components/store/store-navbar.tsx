@@ -3,9 +3,18 @@ import Link from "next/link";
 import { siteConfig } from "@/config/site";
 import { getCartSummary } from "@/server/cart/actions";
 
-const links = [
+const desktopLinks = [
   { href: "/", label: "Inicio" },
   { href: "/catalogo", label: "Catálogo" },
+];
+
+const mobileLinks = [
+  ...desktopLinks,
+  { href: "/nosotros", label: "Nosotros" },
+  { href: "/carrito", label: "Carrito" },
+  { href: "/cuenta/pedidos", label: "Mis pedidos" },
+  { href: "/cuenta/direcciones", label: "Mis direcciones" },
+  { href: "/cuenta/perfil", label: "Mi perfil" },
 ];
 
 export async function StoreNavbar() {
@@ -19,7 +28,7 @@ export async function StoreNavbar() {
         </Link>
 
         <nav className="hidden items-center gap-6 text-sm font-medium text-text-muted sm:flex">
-          {links.map((link) => (
+          {desktopLinks.map((link) => (
             <Link key={link.href} href={link.href} className="transition-colors hover:text-primary">
               {link.label}
             </Link>
@@ -49,8 +58,8 @@ export async function StoreNavbar() {
             <summary className="cursor-pointer list-none rounded-xl px-2.5 py-2 text-sm font-medium text-primary [&::-webkit-details-marker]:hidden">
               Menú
             </summary>
-            <nav className="absolute right-0 top-full mt-2 flex w-40 flex-col gap-1 rounded-xl border border-border bg-surface p-2 shadow-lg">
-              {links.map((link) => (
+            <nav className="absolute right-0 top-full mt-2 flex w-48 flex-col gap-1 rounded-xl border border-border bg-surface p-2 shadow-lg">
+              {mobileLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
