@@ -415,10 +415,10 @@ Si el tiempo se acaba, se entrega lo marcado completo y se documenta en `PROGRES
 - [x] Categorías, métodos de pago, clientes nuevos vs. recurrentes
 
 ### Fase 9 — Estudio de mercado (P2)
-- [ ] Compras por provincia y ciudad
-- [ ] Día de la semana / franja horaria
-- [ ] Embudo de conversión y abandono de carrito
-- [ ] Visitados vs. comprados, recompra y hallazgos automáticos
+- [x] Compras por provincia y ciudad
+- [x] Día de la semana / franja horaria
+- [x] Embudo de conversión y abandono de carrito
+- [x] Visitados vs. comprados, recompra y hallazgos automáticos
 
 ### Fase 10 — Cierre y despliegue (P0)
 - [ ] Clientes y configuración en admin

@@ -254,3 +254,29 @@
 - Script inline de Node (sin red ni credenciales): la heurística acepta `TEST-` y `APP_USR-`, rechaza prefijos ajenos; la selección elige `sandbox_init_point` cuando está presente, `init_point` como fallback y falla si no hay ninguno.
 - `npm run typecheck`, `npm run lint` y `npm run build`: pasan sin errores.
 - `git diff --check`: limpio; el diff del fix es de 16 altas y 9 bajas en un solo archivo.
+
+## 2026-11-20 — Fase 9: estudio de mercado (completa)
+
+**Qué se hizo**
+
+- Se agregó `/admin/mercado` con KPIs, hallazgos, compras por provincia y ciudad (tabla + gráfico de barras), día de la semana y franja horaria (barras + mapa de calor de 7 × 6), embudo de conversión, abandono de carrito, visitados vs. comprados y recompra/valor por cliente. Incluye `loading.tsx`; los errores los cubre el boundary existente de `/admin`.
+- Nuevas consultas puras en `src/server/analytics/market.ts`: reciben rangos o fechas explícitas, no leen sesión/cookies/headers y devuelven datos serializables. Reutilizan `INCOME_STATUSES` y `dayBoundary`; agrupan fechas con `AT TIME ZONE 'America/Argentina/Buenos_Aires'`. Todo porcentaje con denominador cero devuelve `null` y se muestra como "—".
+- Reglas deterministas en `src/server/analytics/market-findings.ts`: provincia dominante, retiro, día/franja pico, producto con visitas y baja conversión, carritos abandonados y recompra. Con datos escasos dicen explícitamente que no alcanzan, en vez de inventar conclusiones.
+- El abandono de carrito se define como carrito con ítems sin actividad en 24 h y sin pedido posterior; el valor es una estimación con precios vigentes, marcada como tal. Los carritos demo no se descartan: se muestran con la etiqueta "(demo)" para no ocultar filas legítimas.
+- Se conectó el enlace "Mercado" del sidebar y se marcaron los cuatro casilleros de Fase 9 en `AGENTS.md`. No se agregaron dependencias ni se tocó el esquema.
+
+**Qué falta**
+
+- Con datos reales conviene revisar los índices de `orders(status, paid_at)`, `product_views(created_at)` y `cart_items(cart_id)` si crece el volumen.
+- Los carritos de invitado no se pueden vincular a un pedido con el esquema actual: siempre cuentan como abandonados si quedan con ítems. Para distinguirlos haría falta una columna `cart_id` en `orders` (migración futura).
+- Clientes y configuración del admin siguen en Fase 10; no se agregaron acá.
+
+**Verificación**
+
+- `npm run typecheck`: pasa sin errores.
+- `npm run lint`: pasa sin errores ni warnings (se quitó un import de tipo sin usar detectado en el primer pasaje).
+- `npm run build`: pasa sin errores; `/admin/mercado` figura como Partial Prerender.
+- `git diff --check`: limpio (exit 0; solo avisos de conversión LF → CRLF por la config de Git en el working copy).
+- Smoke de base de datos (solo lectura, funciones reales ejecutadas con `tsx` sobre el rango acotado 2026-08-01 a 2026-11-20): 20 provincias, 20 ciudades, 28 pedidos de retiro, 7 días con ventas, 5 franjas con ventas, 42 celdas de calor, 98 visitas, 0 carritos con ítems, 180 pedidos creados, 158 pagados, 0 carritos abandonados, 8 productos en el ranking, 20 clientes (20 recurrentes) y 7 hallazgos. Chequeo recursivo: ningún `NaN`/`Infinity`.
+- Smoke HTTP en servidor de producción: `/admin/mercado` y `?period=week` redirigen 307 a `/login?next=…` sin sesión; con JWT admin sintético responden 200 y contienen todas las secciones (hallazgos, provincias, embudo, abandono, mapa de calor, recompra), sin caer en el boundary de error. Servidor detenido y puerto libre.
+- `git status --short`: solo código de Fase 9, el enlace del sidebar, `PROGRESS.md` y `AGENTS.md`. No se crearon credenciales, no se mutó la base, no se llamó a MercadoPago, no se tocó código `TEST-` ni se hicieron commits.

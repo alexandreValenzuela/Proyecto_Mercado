@@ -19,7 +19,7 @@ const sections = [
   { href: "/admin/pedidos", label: "Pedidos", icon: ClipboardList, available: true },
   { href: "/admin/contabilidad", label: "Contabilidad", icon: CircleDollarSign, available: true },
   { href: "/admin/estadisticas", label: "Estadísticas", icon: BarChart3, available: true },
-  { href: "#", label: "Mercado", icon: Map, available: false },
+  { href: "/admin/mercado", label: "Mercado", icon: Map, available: true },
   { href: "#", label: "Clientes", icon: UsersRound, available: false },
   { href: "#", label: "Configuración", icon: Settings, available: false },
 ] as const;
