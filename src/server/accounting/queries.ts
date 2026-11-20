@@ -11,7 +11,8 @@ import { expenseCategories, expenses, orderItems, orders } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth/helpers";
 import { dayBoundary, type AccountingRange } from "@/lib/accounting/periods";
 
-const INCOME_STATUSES = ["paid", "preparing", "shipped", "delivered"] as const;
+/** Estados que cuentan como venta; compartido con `src/server/analytics`. */
+export const INCOME_STATUSES = ["paid", "preparing", "shipped", "delivered"] as const;
 export const ACCOUNTING_MOVEMENT_LIMIT = 500;
 const MAX_EXPENSES = 300;
 

@@ -211,3 +211,29 @@
 - Smoke de base de datos (solo lectura): 180 pedidos (158 con estados de ingreso y 22 excluidos), 158 pedidos con `paid_at` para calcular ingresos, 9.631.300 centavos de ingresos versus 1.279.700 centavos de pedidos excluidos, 32 egresos demo por 1.649.755 centavos, 6 categorías reales, 308 ítems vendidos y 0 con costo faltante. Las consultas con `AT TIME ZONE` devuelven días de noviembre de 2026 coherentes con los datos sembrados.
 - Smoke HTTP en servidor de producción: `/admin/contabilidad`, `/admin/contabilidad/egresos` y `/admin/contabilidad/categorias` redirigen 307 a `/login?next=…` sin sesión; el servidor se detuvo y el puerto quedó libre.
 - `git status`: solo código de contabilidad, `package.json`/`package-lock.json` por Recharts, `PROGRESS.md`, `AGENTS.md` y el enlace del sidebar. No se crearon credenciales, no se mutó la base, no se llamó a MercadoPago y no se hicieron commits.
+
+## 2026-11-20 — Fase 8: dashboard y estadísticas (completa)
+
+**Qué se hizo**
+
+- Se reemplazó el placeholder de `/admin` por KPIs reales (ventas de hoy y del mes, ticket promedio, variación contra el mes anterior alineado por día, pedidos por atender y stock bajo), gráfico de ventas de los últimos 30 días con la serie anterior, tabla de últimos pedidos y alertas de stock con enlace a cada producto.
+- Se agregó `/admin/estadisticas` con filtros de período (día, semana, mes) y granularidad (días, semanas, meses), comparativa contra el bloque anterior, ventas agrupadas, pedidos por estado, top productos por unidades e ingresos, menor rotación, categorías más vendidas y más rentables, métodos de pago, clientes nuevos vs. recurrentes y stock bajo. Incluye `loading.tsx` y un error boundary reutilizable para todo `/admin`.
+- Nuevas consultas puras en `src/server/analytics/queries.ts`: reciben rangos de fechas, agrupan en `America/Argentina/Buenos_Aires` con `AT TIME ZONE`, reutilizan `INCOME_STATUSES` de contabilidad y llaman a `requireAdmin()` en cada función pública. Los estados que cuentan como venta siguen siendo `paid`, `preparing`, `shipped` y `delivered`, con `paid_at` como fecha contable.
+- Decisiones de negocio: "pedidos por atender" son los ya pagados que esperan transición del admin (`paid`, `preparing`, `shipped`), no los `pending_payment` que esperan al cliente. La variación mensual compara el mes en curso contra igual cantidad de días del mes anterior; sin ventas previas muestra "Sin base de comparación" en vez de infinito. El margen por producto/categoría usa costos snapshot y marca "Margen incompleto" cuando algún ítem no tiene costo cargado.
+- Se agregaron utilidades puras de período en `src/lib/analytics/periods.ts`, validación Zod de `searchParams` en `src/lib/validators/analytics.ts` y componentes Recharts en `src/components/admin/analytics`. Se conectó el enlace "Estadísticas" del sidebar. No se agregaron dependencias: Recharts 3.11.0 ya estaba instalado.
+- Actualización de la documentación: se marcaron los tres casilleros verificados de Fase 8 en `AGENTS.md`.
+
+**Qué falta**
+
+- Los hallazgos automáticos, mapa de calor, embudo y abandono de carrito siguen en Fase 9 (no se tocaron).
+- Con datos reales conviene revisar los índices de `orders(status, paid_at)` y `order_items(variant_id)` si crece el volumen; con 180 pedidos demo no hace falta.
+- `next start` sigue emitiendo el aviso preexistente de Next.js sobre `crypto.getRandomValues()` al prerenderizar rutas admin (también aparece en `/admin/contabilidad`, que no se modificó). No rompe el render: las rutas responden 200 y muestran los datos.
+
+**Verificación**
+
+- Documentación actual verificada vía Context7: agregados y expresiones `sql` de Drizzle, componentes de Recharts 3 y `searchParams`/`connection()` de Next.js 16.
+- `npm run typecheck`, `npm run lint` y `npm run build`: pasan sin errores. El build reporta `/admin` y `/admin/estadisticas` como Partial Prerender.
+- Fix verificado en HTTP: la expresión de agrupación de fechas usa un único objeto `SQL` reutilizado en `SELECT` y `GROUP BY`, porque Drizzle bindea cada plantilla por separado y Postgres rechazaba la consulta con $1 y $8 distintos. Sin ese fix las rutas respondían 200 pero el contenido streams fallaba y faltaban las secciones del dashboard.
+- Smoke de base de datos (solo lectura): 180 pedidos, 158 con estados de ingreso y 22 excluidos (`cancelled`/`pending_payment`), 9.631.300 centavos de ingresos, 49 pedidos pagados en los últimos 30 días por 2.708.600 centavos, 0 ítems vendidos sin costo. Las unidades por categoría, los métodos de pago y los segmentos de clientes cuadran con los totales del período.
+- Smoke HTTP en servidor de producción: `/admin`, `/admin/estadisticas` y sus variantes `period=week&granularity=week` y `period=day&granularity=month` responden 200 con sesión admin, muestran importes ARS y las secciones esperadas; sin sesión redirigen 307 a `/login?next=…`. Se verificó además `/admin/contabilidad` como control del aviso de prerender preexistente. Servidor detenido al finalizar.
+- `git status`: solo código del dashboard/estadísticas, `PROGRESS.md` y `AGENTS.md`. No se crearon credenciales, no se mutó la base, no se llamó a MercadoPago y no se hicieron commits.

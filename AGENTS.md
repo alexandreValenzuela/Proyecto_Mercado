@@ -410,9 +410,9 @@ Si el tiempo se acaba, se entrega lo marcado completo y se documenta en `PROGRES
 - [x] Gráficos y tabla unificada de movimientos
 
 ### Fase 8 — Dashboard y estadísticas (P1)
-- [ ] KPIs y gráfico del dashboard
-- [ ] Ventas por período con comparativa, top productos, stock bajo, ticket promedio
-- [ ] Categorías, métodos de pago, clientes nuevos vs. recurrentes
+- [x] KPIs y gráfico del dashboard
+- [x] Ventas por período con comparativa, top productos, stock bajo, ticket promedio
+- [x] Categorías, métodos de pago, clientes nuevos vs. recurrentes
 
 ### Fase 9 — Estudio de mercado (P2)
 - [ ] Compras por provincia y ciudad
