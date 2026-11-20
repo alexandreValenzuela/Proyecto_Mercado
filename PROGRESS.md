@@ -348,3 +348,16 @@ Estado final: `src/lib/mercadopago.ts` elige la URL según `MP_ENVIRONMENT`, con
 
 - `npm run typecheck`, `npm run lint`, `npm run build` y `git diff --check`: pasan; `/api/auth/providers` anuncia únicamente `credentials`.
 - Smoke HTTP real con sesión: admin (`role=admin`) → login 302 a `/admin`, `/api/auth/session` devuelve `role=admin`, `GET /admin` → 200. Usuario temporal `role=customer` creado solo para la prueba → `GET /admin` → 307 a `/403`; el usuario se borró al finalizar. No se usaron credenciales reales nuevas ni se tocó `.env.local`.
+
+## 2026-11-20 — Botón de acceso al panel para administradores
+
+**Qué se hizo**
+
+- `src/components/store/store-navbar.tsx`: si `session.user.role === "admin"`, el navbar muestra un botón "Admin" con ícono de escudo (desktop) y la entrada "Panel de administración" en el menú de celular. Invitados y clientes no ven ninguno de los dos.
+- El navbar llama `await connection()` antes de `auth()` porque Auth.js genera un valor aleatorio de CSRF y con PPR eso se detectaba como `crypto.getRandomValues()` inestable durante el prerender (`/`, log del servidor). El navbar ya tiene su propio `Suspense` en el layout, así que solo esa parte se resuelve en request time.
+- Se corrigió el enfoque anterior del rol: se quitó la consulta a la BD del callback `jwt` de `src/auth.ts` (se ejecutaba en cada `auth()`, incluso en páginas públicas y durante prerenders, y Next abortaba el `fetch` con `HANGING_PROMISE_REJECTION`). La verificación contra la base ahora vive en `requireAdmin()` (`src/lib/auth/helpers.ts`), que corre solo en contextos admin: el token sigue siendo la primera barrera y la base confirma que el rol sigue siendo `admin`. Queda sin efecto la frase "se actualiza sin relogin" del entry anterior: si el rol cambia en la base, el usuario debe reingresar para que el botón aparezca/desaparezca en el storefront, pero el acceso a `/admin` queda bloqueado igual.
+
+**Verificación**
+
+- `npm run typecheck`, `npm run lint`, `npm run build` y `git diff --check`: pasan.
+- Smoke HTTP con el build final: invitado → sin link admin; admin → link admin presente y `GET /admin` → 200; cliente temporal → sin link admin y `GET /admin` → 307 (usuario borrado después). Log del servidor limpio, sin errores de prerender.
