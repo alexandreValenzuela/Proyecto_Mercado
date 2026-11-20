@@ -16,7 +16,7 @@ const sections = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, available: true },
   { href: "/admin/productos", label: "Productos", icon: Boxes, available: true },
   { href: "/admin/categorias", label: "Categorías", icon: Tags, available: true },
-  { href: "#", label: "Pedidos", icon: ClipboardList, available: false },
+  { href: "/admin/pedidos", label: "Pedidos", icon: ClipboardList, available: true },
   { href: "#", label: "Contabilidad", icon: CircleDollarSign, available: false },
   { href: "#", label: "Estadísticas", icon: BarChart3, available: false },
   { href: "#", label: "Mercado", icon: Map, available: false },

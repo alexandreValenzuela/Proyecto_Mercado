@@ -400,9 +400,9 @@ Si el tiempo se acaba, se entrega lo marcado completo y se documenta en `PROGRES
 - [x] `/cuenta/pedidos` y detalle, con "Reintentar pago"
 
 ### Fase 6 — Gestión de pedidos admin (P0)
-- [ ] Listado con filtros y detalle
-- [ ] Cambio de estado con flujo válido + historial
-- [ ] Cancelación con devolución de stock
+- [x] Listado con filtros y detalle
+- [x] Cambio de estado con flujo válido + historial
+- [x] Cancelación con devolución de stock
 
 ### Fase 7 — Contabilidad (P1)
 - [ ] CRUD de categorías de egreso y de egresos

@@ -160,3 +160,28 @@
 - Smoke de base de datos (solo lectura): 1 fila de `store_settings`, 180 pedidos, 351 ítems, 346 entradas de historial, 166 eventos de pago, 20 direcciones, 28 variantes, secuencia `order_number_sequence` en 360; columnas `mp_status`, `mp_payment_id`, `mp_preference_id`, `paid_at` y `shipping_address` presentes.
 - Smoke HTTP en servidor de producción: 200 en `/checkout`, `/checkout/resultado`, `/catalogo` y `/carrito`; 307 a login en `/cuenta/direcciones` y `/cuenta/pedidos`; 401 en el webhook sin firma. Sin 500 ni errores en el log.
 - No se ejecutaron comandos que modifiquen la base, no se leyeron ni imprimieron credenciales, no se llamó a la API real de MercadoPago y no se hicieron commits.
+
+## 2026-11-19 — Fase 6: gestión de pedidos admin (completa)
+
+**Qué se hizo**
+
+- Se agregó `/admin/pedidos` con filtros por estado, rango de fechas y texto libre (número de pedido, nombre o email del cliente), paginación de 12 por página y orden por más reciente. La tabla muestra número, cliente, fecha, total en ARS, estado, medio de pago y una alerta de "Revisión manual" cuando `mp_status` tiene el prefijo `MANUAL_REVIEW:`.
+- Se agregó `/admin/pedidos/[id]` con cliente, dirección congelada, ítems con snapshots, información de pago (`mp_status`, `mp_payment_id`, `payment_method`, `paid_at`, `cancelled_at`), línea de tiempo con el usuario que cambió cada estado y movimientos de stock asociados. El aviso de revisión manual muestra el valor completo de `mp_status`.
+- Nuevas queries de panel en `src/db/queries/orders.ts`: `listAdminOrders` y `getAdminOrderDetail`. Ambas llaman a `requireAdmin()` además del proxy; el texto libre escapa comodines ILIKE y las fechas se interpretan en hora Argentina (-03:00).
+- Reglas de transición centralizadas en `src/lib/admin/orders.ts`: `paid → preparing → shipped → delivered`. `pending_payment` solo avanza por webhook; `delivered` y `cancelled` son terminales. La UI ofrece solo las transiciones válidas y el servidor las valida de nuevo con Zod.
+- `src/server/admin/orders.ts` implementa `changeOrderStatusAction` y `cancelOrderAction` en transacciones con `FOR UPDATE`. El cambio de estado escribe `order_status_history` con `changed_by = session.user.id`. La cancelación solo se permite desde `pending_payment`, `paid`, `preparing` o `shipped`, devuelve stock con movimientos `cancellation` en la misma transacción, setea `cancelled_at` y es idempotente (pedido bloqueado + guarda de devoluciones previas).
+- Decisión de stock: si existen movimientos `sale` del pedido se devuelve exactamente lo descontado (cubre descuentos parciales por stock insuficiente); si no existen —pedidos demo— se usa la cantidad de los ítems para estados pagos. Así se cumple la regla de devolución sin depender de que el seed haya generado movimientos de venta.
+- Se conectó el enlace "Pedidos" del sidebar y se agregó un `loading.tsx` para la ruta del listado.
+
+**Qué falta**
+
+- Probar el recorrido completo con un pago sandbox real: el webhook es el único que genera el estado `paid`, por lo que las transiciones posteriores no se ejercitaron end-to-end en esta sesión.
+- Según crezca el volumen, conviene mover los filtros a índices compuestos y revisar el tamaño de página.
+
+**Verificación**
+
+- Documentación actual verificada vía Context7: `db.transaction()` de Drizzle y `searchParams` async / `revalidatePath` en Server Actions de Next.js 16. No se agregaron dependencias.
+- `npm run typecheck`, `npm run lint` y `npm run build`: pasan sin errores. `next build` reporta `/admin/pedidos` y `/admin/pedidos/[id]` como Partial Prerender.
+- Smoke de base de datos (solo lectura): 180 pedidos, 351 ítems, 346 entradas de historial, 166 eventos de pago, 0 pedidos en revisión manual, 0 movimientos de cancelación y 0 variantes con stock negativo. Los datos demo quedaron intactos.
+- Smoke HTTP en servidor de producción: `/admin/pedidos` y `/admin/pedidos/<id>` redirigen 307 a `/login?next=…` sin sesión; el servidor se detuvo al finalizar.
+- `git status`: solo archivos de código del panel de pedidos, `PROGRESS.md` y `AGENTS.md`. No se crearon credenciales, no se mutó la base, no se llamó a MercadoPago y no se hicieron commits.
