@@ -403,4 +403,10 @@ Estado final: `src/lib/mercadopago.ts` elige la URL según `MP_ENVIRONMENT`, con
 **Verificación**
 
 - `npm run typecheck`, `npm run lint`, `npm run build` (35 rutas) y `git diff --check`: pasan.
-- Falta: desplegar y repetir la prueba desde el celular en modo incógnito para ver qué mensaje aparece.
+- Desplegado (deploy `9ef1f702`). El usuario reportó el mensaje "Revisá los datos marcados en rojo y volvé a intentar.", confirming que `onInvalid` se dispara (el formulario sí hidrata y el submit corre). Pero no aparece ningún campo en rojo, así que el error está en una ruta que no se renderiza o no es visible.
+
+## 2026-11-20 — Checkout: mostrar los mensajes concretos de validación
+
+- `src/components/store/checkout-form.tsx`: `onInvalid` ahora recorre el `FieldErrors` de react-hook-form y muestra hasta 3 mensajes reales de Zod en el cartel al lado del botón ("Revisá estos datos: …"), con el mensaje genérico como fallback.
+- Motivo: hacía falta identificar qué campo rechaza el esquema sin depender de ver los campos en rojo en el celular.
+- Verificación: typecheck, lint, build (35 rutas) y `git diff --check` pasan. Falta: desplegar y repetir la prueba.
