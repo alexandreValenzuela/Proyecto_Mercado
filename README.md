@@ -36,7 +36,7 @@ Copiá `.env.example` a `.env.local` y completá los valores que necesites para 
 | `AUTH_SECRET` | Secreto de Auth.js; generarlo con `openssl rand -base64 32`. |
 | `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` | Credenciales de Google OAuth (Fase 2). |
 | `MP_ACCESS_TOKEN`, `MP_WEBHOOK_SECRET` | Credenciales de MercadoPago; usar las del entorno que indique `MP_ENVIRONMENT`. |
-| `MP_ENVIRONMENT` | `production` (por defecto) o `test`. Define si el checkout usa `init_point` o `sandbox_init_point`; MP devuelve ambos incluso con credenciales de producción, así que no se detecta solo. |
+| `MP_ENVIRONMENT` | `test` (por defecto) o `production`. Define si el checkout usa `sandbox_init_point` o `init_point`; MP devuelve ambas URLs y el prefijo del token de Test puede variar, así que el entorno se declara explícitamente. |
 | `NEXT_PUBLIC_MP_PUBLIC_KEY` | Solo si se usa Bricks (no previsto para Checkout Pro). |
 | `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | Subida de imágenes del admin (Fase 3). |
 | `ADMIN_EMAIL`, `ADMIN_INITIAL_PASSWORD` | Primer usuario administrador (Fase 1). |

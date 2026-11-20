@@ -257,9 +257,11 @@
 
 ### Corrección del fix anterior (misma fecha)
 
-La nota de arriba quedó **sin efecto**: `sandbox_init_point` NO es señal de credenciales de Test. Con las credenciales actuales MP devolvió `init_point` **y** `sandbox_init_point`, y un card token creado con ese access token informó `live_mode: true`; además `POST /v1/payments` con la tarjeta `APRO` sigue respondiendo 401 `Unauthorized use of live credentials` incluso con el SDK oficial y con `x-test-scope: sandbox`. Conclusión: esas credenciales operan en modo producción y la regla `sandbox_init_point ?? init_point` habría mandado a compradores reales al checkout sandbox.
+La nota de arriba quedó **sin efecto**: `sandbox_init_point` NO es señal de credenciales de Test. MP devuelve `init_point` **y** `sandbox_init_point` con el mismo par de credenciales. Tampoco sirve el prefijo: la documentación oficial de credenciales de prueba dice textual que «El prefijo del *Access Token* de prueba puede variar dependiendo de la solución que estés integrando». Las credenciales provistas por el usuario son **de Test** y esa es la fuente autoritativa para este proyecto.
 
-Estado final: `src/lib/mercadopago.ts` elige la URL según `MP_ENVIRONMENT=test` (otro valor o ausencia ⇒ `init_point`). Se quitó `isSandboxAccessToken` porque no tenía consumidores y ningún prefijo permite distinguir el entorno de forma confiable. Documentado en `.env.example` y `README.md`. La prueba real de pago con tarjeta de test sigue pendiente hasta contar con credenciales del entorno Test.
+Queda documentado como observación sin resolver: un card token creado con el access token informó `live_mode: true` y `POST /v1/payments` con la tarjeta `APRO` respondió 401 `Unauthorized use of live credentials` incluso con el SDK oficial y con `x-test-scope: sandbox`. No se determinó la causa; no se reclamó que fueran credenciales de producción.
+
+Estado final: `src/lib/mercadopago.ts` elige la URL según `MP_ENVIRONMENT`, con **default `test`** (⇒ `sandbox_init_point`) y `production` como opt-in explícito (⇒ `init_point`). Se quitó `isSandboxAccessToken` porque ningún prefijo permite distinguir el entorno de forma confiable. Documentado en `.env.example` y `README.md`. La prueba real de pago con tarjeta de test sigue pendiente: el bloqueo está en la creación del pago vía API, no en la elección de la URL de checkout.
 
 ## 2026-11-20 — Fase 9: estudio de mercado (completa)
 

@@ -49,13 +49,15 @@ function getMercadoPagoConfig(): MPConfig {
 
 /**
  * Checkout Pro devuelve `init_point` y `sandbox_init_point` incluso con
- * credenciales de producción, así que ninguna de las dos URLs revela el
- * entorno. El prefijo del access token tampoco: `TEST-` y `APP_USR-` aparecen
- * en ambos modos según la solución. Por eso el entorno se declara
- * explícitamente con `MP_ENVIRONMENT=test` y por defecto es producción.
+ * credenciales de producción, y el prefijo del access token de prueba puede
+ * variar según la solución (`TEST-` o `APP_USR-`). Ninguna señal de la API
+ * permite inferir el entorno de forma confiable, así que se declara con
+ * `MP_ENVIRONMENT`. El proyecto trabaja con credenciales de Test, por lo que
+ * el default es sandbox; producción requiere `MP_ENVIRONMENT=production`.
  */
 function isSandboxCheckoutEnabled(): boolean {
-  return process.env.MP_ENVIRONMENT?.trim().toLowerCase() === "test";
+  const environment = process.env.MP_ENVIRONMENT?.trim().toLowerCase();
+  return environment !== "production";
 }
 
 export function getWebhookSecret(): string {
