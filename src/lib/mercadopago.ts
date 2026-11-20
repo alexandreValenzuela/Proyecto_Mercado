@@ -11,7 +11,6 @@ export type CheckoutPreferenceLine = {
 
 type MPConfig = {
   config: MercadoPagoConfig;
-  sandbox: boolean;
   appUrl: URL;
 };
 
@@ -44,14 +43,22 @@ function getMercadoPagoConfig(): MPConfig {
 
   return {
     config: new MercadoPagoConfig({ accessToken, options: { timeout: 10000 } }),
-    sandbox: isSandboxAccessToken(accessToken),
     appUrl: parsedUrl,
   };
 }
 
-/** Los access tokens de prueba de MercadoPago empiezan con `TEST-`. */
+/**
+ * Heurística de mejor esfuerzo, NO una señal confiable del entorno.
+ * Los tokens de prueba legacy empiezan con `TEST-`, pero los tokens de prueba
+ * actuales de MercadoPago usan el prefijo `APP_USR-`, igual que los de
+ * producción. Por lo tanto el prefijo por sí solo no permite distinguir Test
+ * de Producción con credenciales modernas: un `true` acá solo significa
+ * "podría ser un token de prueba". Nunca se usa para elegir la URL de checkout;
+ * la señal autoritativa es la respuesta de la API (`sandbox_init_point` solo
+ * aparece cuando las credenciales están en modo Test).
+ */
 export function isSandboxAccessToken(accessToken: string): boolean {
-  return accessToken.startsWith("TEST-");
+  return accessToken.startsWith("TEST-") || accessToken.startsWith("APP_USR-");
 }
 
 export function getWebhookSecret(): string {
@@ -82,7 +89,7 @@ export async function createCheckoutPreference(input: {
   lines: CheckoutPreferenceLine[];
   payerEmail: string | null;
 }): Promise<CreatedPreference> {
-  const { config, sandbox, appUrl } = getMercadoPagoConfig();
+  const { config, appUrl } = getMercadoPagoConfig();
 
   const preference = await new Preference(config).create({
     body: {
@@ -106,10 +113,10 @@ export async function createCheckoutPreference(input: {
     },
   });
 
-  // Con token de prueba se usa sandbox_init_point; en producción, init_point.
-  const checkoutUrl = sandbox
-    ? (preference.sandbox_init_point ?? preference.init_point)
-    : (preference.init_point ?? preference.sandbox_init_point);
+  // MP devuelve sandbox_init_point solo con credenciales en modo Test. Esa es
+  // la señal autoritativa: funciona igual con tokens legacy `TEST-` y con los
+  // modernos `APP_USR-`, que comparten prefijo con producción.
+  const checkoutUrl = preference.sandbox_init_point ?? preference.init_point;
   if (!checkoutUrl) {
     throw new Error("MercadoPago no devolvió una URL de pago. Intentá de nuevo en unos minutos.");
   }

@@ -237,3 +237,20 @@
 - Smoke de base de datos (solo lectura): 180 pedidos, 158 con estados de ingreso y 22 excluidos (`cancelled`/`pending_payment`), 9.631.300 centavos de ingresos, 49 pedidos pagados en los últimos 30 días por 2.708.600 centavos, 0 ítems vendidos sin costo. Las unidades por categoría, los métodos de pago y los segmentos de clientes cuadran con los totales del período.
 - Smoke HTTP en servidor de producción: `/admin`, `/admin/estadisticas` y sus variantes `period=week&granularity=week` y `period=day&granularity=month` responden 200 con sesión admin, muestran importes ARS y las secciones esperadas; sin sesión redirigen 307 a `/login?next=…`. Se verificó además `/admin/contabilidad` como control del aviso de prerender preexistente. Servidor detenido al finalizar.
 - `git status`: solo código del dashboard/estadísticas, `PROGRESS.md` y `AGENTS.md`. No se crearon credenciales, no se mutó la base, no se llamó a MercadoPago y no se hicieron commits.
+
+## 2026-11-20 — Fix (Fase 5): detección de entorno de MercadoPago
+
+**Qué se hizo**
+
+- Se corrigió la elección de la URL de Checkout Pro en `src/lib/mercadopago.ts`: ahora se usa `preference.sandbox_init_point ?? preference.init_point`, sin mirar el prefijo del access token. MercadoPago devuelve `sandbox_init_point` solo con credenciales en modo Test, así que la misma regla funciona con tokens legacy `TEST-` y con los modernos `APP_USR-`.
+- `isSandboxAccessToken` queda como heurística de mejor esfuerzo: reconoce ambos prefijos y su comentario aclara que el prefijo NO distingue Test de Producción con credenciales modernas. Se quitó el campo `sandbox` de la configuración porque no tenía ningún otro uso y era una trampa para lectores futuros.
+
+**Por qué**
+
+- Los access tokens de prueba actuales empiezan con `APP_USR-`, igual que los de producción. Con la lógica anterior (`TEST-` ⇒ sandbox) esas credenciales elegían `init_point` y mandaban al usuario al sitio de producción. Se confirmó con el SDK v3: una preferencia creada con el token de prueba devolvió `init_point` y `sandbox_init_point`.
+
+**Verificación**
+
+- Script inline de Node (sin red ni credenciales): la heurística acepta `TEST-` y `APP_USR-`, rechaza prefijos ajenos; la selección elige `sandbox_init_point` cuando está presente, `init_point` como fallback y falla si no hay ninguno.
+- `npm run typecheck`, `npm run lint` y `npm run build`: pasan sin errores.
+- `git diff --check`: limpio; el diff del fix es de 16 altas y 9 bajas en un solo archivo.
