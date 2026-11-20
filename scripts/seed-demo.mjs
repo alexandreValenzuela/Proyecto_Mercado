@@ -64,6 +64,41 @@ const categoryDefs = [
   { name: "Regalos", slug: "regalos", position: 5 },
 ];
 
+const DEMO_IMAGE_URLS = {
+  "camiseta-basica-algodon":
+    "https://thumbs.dreamstime.com/b/creamcolored-crew-neck-tshirt-mockup-un-estudio-de-alta-calidad-con-una-camiseta-cuello-tripulaci%C3%B3n-color-crema-colocada-sobre-395904238.jpg",
+  "remera-estampada-gao":
+    "https://acdn-us.mitiendanube.com/stores/006/086/162/products/camiseta-baisica-color-topo-1ba962456d6498650d17935731967768-1024-1024.webp",
+  "hoodie-unisex":
+    "https://acdn-us.mitiendanube.com/stores/003/588/275/products/lavanda-2024-03-25t102334-368-8ad7040bf9ed9be15d17113730195359-1024-1024.webp",
+  "pantalon-de-lino":
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6yIYyYQlYeG3jVaQ9eTb9UQ9nUIn4Lt7ko2FcTPWbxw&s=10",
+  "calcetines-pack-x3":
+    "https://acdn-us.mitiendanube.com/stores/001/248/228/products/medias-renno-2-1fc2844c76bb1eadbb17412983076537-1024-1024.webp",
+  "gorro-de-lana":
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRzA7ACKxjhRrRsXUsnLxDQ_HZdM0Gdnpi3GCIZZjwlPA&s=10",
+  "cartera-de-tela":
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRio1AIlGMCyYniaJOg_zIhtpAHSfS5feTQp7xk3mliyw&s=10",
+  "cinturon-de-cuero":
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRfpKhxPIaMSwDmY_IoM1YfYBRjwViaEidxUX8rN5au6A&s=10",
+  "veladora-aromatica":
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRb8pN7YgZSDRUOspeJg7y45y_rboDZ5On5MCYXitmAXg&s=10",
+  "set-de-tazas-ceramica":
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhNK26vi9NOc6xwQbmreJ7SjvdSdoYyxtGYbhkAb_baw&s=10",
+  "mantel-de-lino":
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTjHpNugDdoO0BJyikaQ3jaQpQl1DxZzQidAZiPLRsN3A&s",
+  "cuaderno-a5-tapas-duras":
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTxCUUZe5S3fPNyCi4yUYZ_gvo_GHGfv467fgIj_Cl0YQ&s",
+  "set-de-lapiceras":
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRn5pcdJf8bIyphnEuYL8xfU8NYmBbzhF9lMcNCM6NdoA&s",
+  "agenda-2027":
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSgrjhjlRFpy_G6MrHZd92Jj579PhzozTX5kqyd5xMgYg&s",
+  "caja-de-regalo-personalizada":
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRWUMDrsfh-s97Qz2BBYDiMm0sGReh79gERtj_6tihQzA&s=10",
+  "kit-de-cuidado-personal":
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSzIx5druh1xsYUNUSXbOsfYhMUAM2KftYEiuxN0fzGCQ&s",
+};
+
 const productDefs = [
   {
     name: "Camiseta básica de algodón",
@@ -300,7 +335,9 @@ function buildDataset(expenseCategoryIds) {
   const images = products.map((product, index) => ({
     id: demoId("image", index),
     productId: product.id,
-    url: `https://placehold.co/600x600/F1E9DE/2B2A28/png?text=${encodeURIComponent(product.name)}`,
+    url:
+      DEMO_IMAGE_URLS[product.slug] ??
+      `https://placehold.co/600x600/F1E9DE/2B2A28/png?text=${encodeURIComponent(product.name)}`,
     publicId: `demo/product-${index + 1}`,
     position: 0,
   }));
