@@ -1,5 +1,5 @@
 /**
- * Esquema completo de GAO Store (AGENTS.md, sección 5).
+ * Esquema completo de Nudo (AGENTS.md, sección 5).
  *
  * Convenciones: tablas/columnas en snake_case, ids uuid con gen_random_uuid(),
  * dinero en centavos (integer) y timestamps con zona horaria.
@@ -30,35 +30,9 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
-/** Provincias argentinas + CABA, usadas por direcciones y copias de envío. */
-export const ARGENTINE_PROVINCES = [
-  "Buenos Aires",
-  "Ciudad Autónoma de Buenos Aires",
-  "Catamarca",
-  "Chaco",
-  "Chubut",
-  "Córdoba",
-  "Corrientes",
-  "Entre Ríos",
-  "Formosa",
-  "Jujuy",
-  "La Pampa",
-  "La Rioja",
-  "Mendoza",
-  "Misiones",
-  "Neuquén",
-  "Río Negro",
-  "Salta",
-  "San Juan",
-  "San Luis",
-  "Santa Cruz",
-  "Santa Fe",
-  "Santiago del Estero",
-  "Tierra del Fuego",
-  "Tucumán",
-] as const;
+import { ARGENTINE_PROVINCES, type ArgentineProvince } from "@/lib/provinces";
 
-export type ArgentineProvince = (typeof ARGENTINE_PROVINCES)[number];
+export { ARGENTINE_PROVINCES, type ArgentineProvince };
 
 /** Copia congelada de la dirección dentro del pedido (para análisis de mercado). */
 export type ShippingAddressSnapshot = {
@@ -68,7 +42,8 @@ export type ShippingAddressSnapshot = {
   number: string;
   floor_apt?: string | null;
   city: string;
-  province: ArgentineProvince;
+  /** Vacía en pedidos con retiro en persona (no hay dirección de envío). */
+  province: ArgentineProvince | "";
   postal_code: string;
   notes?: string | null;
 };

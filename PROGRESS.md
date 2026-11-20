@@ -131,3 +131,32 @@
 - Smoke de base de datos (solo lectura): 0 carritos y 0 ítems (sin mutaciones), 16 productos demo, 28 variantes demo, 20 clientes demo y 180 pedidos demo intactos.
 - Smoke HTTP en servidor de producción: 200 en `/carrito` (estado vacío y contador "Carrito, 0 productos"), `/` (contador presente) y `/producto/camiseta-basica-algodon` (botón real, sin placeholder). `/checkout` devuelve 404 por Fase 5. Log del servidor sin errores de prerender.
 - No se ejecutaron comandos que modifiquen la base, no se crearon archivos de credenciales y no se hicieron commits.
+
+## 2026-11-19 — Fase 5: checkout, pagos y pedidos (implementada; prueba en vivo pendiente)
+
+**Qué se hizo**
+
+- Se instaló `mercadopago@3.6.2` (SDK oficial) y se verificó su API actual vía Context7 + los propios `.d.ts` del paquete: `Preference.create`, `Payment.get` y `WebhookSignatureValidator.validate`. Integración elegida: **Checkout Pro** con redirección; `sandbox_init_point` con token `TEST-` y `init_point` en producción.
+- `src/lib/mercadopago.ts`: cliente perezoso, validación de `MP_ACCESS_TOKEN`/`APP_URL` en el punto de uso (nunca al importar, para que el build ande sin credenciales), `notification_url = ${APP_URL}/api/webhooks/mercadopago`, `external_reference = order.id`, `back_urls` con `order` y `status`, y `auto_return: approved`.
+- `src/server/checkout/order-service.ts`: `createPendingOrder()` crea pedido + ítems con snapshots + historial en UNA transacción, leyendo configuración, carrito, precios, costos, stock e dirección desde la BD (nunca acepta importes del cliente). `createPreferenceForOrder()` reutiliza el mismo pedido para el alta y para "Reintentar pago", sin duplicarlo.
+- Webhook `/api/webhooks/mercadopago`: valida la firma `x-signature` con el SDK antes de leer el body, ignora notificaciones que no son de pago, consulta siempre el pago a la API de MP (nunca confía en el cuerpo), registra el evento con idempotencia por `(provider, external_id, action)` y, en una sola transacción, pasa el pedido a `paid`, escribe `paid_at`/`mp_payment_id`/`payment_method`, descuenta stock con `stock_movements` tipo `sale` sin permitir negativo, vacía el carrito y registra el historial. Rechazados/cancelados/expirados dejan el pedido en `pending_payment` para permitir reintento.
+- Convención para stock insuficiente al aprobar: como el esquema no tiene columna de revisión manual y no se agregó migración, se marca `orders.mp_status` con el prefijo `MANUAL_REVIEW:` y el detalle del pedido lo muestra como advertencia. El panel admin deberá leer ese prefijo.
+- Direcciones: CRUD completo en `/cuenta/direcciones` (`src/db/queries/addresses.ts` + `src/server/account/address-actions.ts`), siempre filtrado por `session.user.id`, con una sola predeterminada por usuario y reasignación al eliminar.
+- UI: `/checkout` (envío/retiro, dirección guardada o nueva, resumen en vivo), `/checkout/resultado` (aprobado/pendiente/rechazado, mostrando además el estado real de la BD y avisando que el webhook manda), `/cuenta/pedidos` y `/cuenta/pedidos/[id]` con ítems, dirección congelada, pago, línea de tiempo y botón "Reintentar pago". Textos en español rioplatense y marca tomada de `siteConfig`.
+
+**Qué falta**
+
+- Probar el flujo completo en vivo con el túnel y los usuarios de prueba de MercadoPago: la preferencia real, la redirect a la URL de sandbox, el webhook firmado y el descuento de stock. No se hizo porque no hay URL pública ni se permiten llamadas reales a la API en esta sesión.
+- La URL pública del webhook en desarrollo: con `APP_URL=http://localhost:3000` todo cae en localhost; hay que apuntarla al túnel (ngrok/cloudflared) y registrar esa URL en el panel de MP.
+- Confirmar los usuarios de prueba (comprador/vendedor) del panel de desarrolladores; la tarjeta sandbox de prueba quedó fuera de cualquier archivo.
+- Mostrar el prefijo `MANUAL_REVIEW:` en el panel admin de pedidos (Fase 6) y decidir si se agrega una columna dedicada en una migración futura.
+
+**Verificación**
+
+- Documentación verificada vía Context7 (SDK de MercadoPago, validación de firma y Next.js 16) y contrastada contra los tipos instalados; `mercadopago@3.6.2` es `latest`.
+- `npm run typecheck`, `npm run lint` y `npm run build`: pasan sin errores. Fix de build: `export const runtime = "nodejs"` es incompatible con `cacheComponents`, se removió (los route handlers ya son Node.js por defecto).
+- Fix de PPR: `auth()` usa `crypto.getRandomValues()` y rompía el prerender de `/checkout` y `/checkout/resultado`; se agregó `await connection()` antes de `requireUser()` en todas las pantallas de cuenta y checkout. Log del servidor sin errores de prerender tras el fix.
+- Smoke local de firma (sin credenciales ni red): una firma HMAC-SHA256 válida es aceptada y una con secreto distinto se rechaza con `InvalidWebhookSignatureError`.
+- Smoke de base de datos (solo lectura): 1 fila de `store_settings`, 180 pedidos, 351 ítems, 346 entradas de historial, 166 eventos de pago, 20 direcciones, 28 variantes, secuencia `order_number_sequence` en 360; columnas `mp_status`, `mp_payment_id`, `mp_preference_id`, `paid_at` y `shipping_address` presentes.
+- Smoke HTTP en servidor de producción: 200 en `/checkout`, `/checkout/resultado`, `/catalogo` y `/carrito`; 307 a login en `/cuenta/direcciones` y `/cuenta/pedidos`; 401 en el webhook sin firma. Sin 500 ni errores en el log.
+- No se ejecutaron comandos que modifiquen la base, no se leyeron ni imprimieron credenciales, no se llamó a la API real de MercadoPago y no se hicieron commits.

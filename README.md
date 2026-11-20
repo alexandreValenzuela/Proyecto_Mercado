@@ -1,4 +1,4 @@
-# GAO Store
+# Nudo
 
 Plataforma web de e-commerce para un emprendimiento, con foco en gestión contable y estudio de mercado. El proyecto sigue la especificación completa de `AGENTS.md`; este README cubre la puesta en marcha de la base del proyecto (Fase 0).
 
@@ -80,7 +80,7 @@ La integración prevista es Checkout Pro con redirección y webhook validado. La
 
 - `src/app`: rutas de App Router (storefront, auth, admin y API en fases posteriores).
 - `src/components/ui`: primitivas generadas por shadcn/ui.
-- `src/config/site.ts`: nombre de marca y constantes regionales (único lugar donde se define `GAO Store`).
+- `src/config/site.ts`: nombre de marca y constantes regionales (único lugar donde se define `Nudo`).
 - `src/db`: esquema, cliente de Neon y consultas.
 - `src/lib`, `src/server`: lógica de integraciones y reglas de negocio.
 - `scripts`: tareas de base de datos y administración.

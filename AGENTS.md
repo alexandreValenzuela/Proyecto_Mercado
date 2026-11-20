@@ -1,4 +1,4 @@
-# AGENTS.md — GAO Store (Grupo 10)
+# AGENTS.md — Nudo (Grupo 10)
 
 > Este archivo es la fuente de verdad del proyecto. Leelo completo al iniciar cada sesión.
 > Si algo no está definido acá, preguntá al usuario en vez de inventar.
@@ -86,7 +86,7 @@ Scripts requeridos en `package.json`: `dev`, `build`, `start`, `lint`, `typechec
 
 **Estilo:** claro, cálido y amigable (no oscuro). Bordes redondeados (12–16 px), mucho aire, sombras muy suaves, ilustraciones/íconos simples. Mobile-first.
 
-**Nombre de la marca: pendiente.** Usar el nombre provisional `GAO Store` desde **una única constante** (`src/config/site.ts`) para cambiarlo en un solo lugar. El logo es un texto estilizado por ahora.
+**Nombre de la marca: `Nudo`** (definido por el usuario). Definido en **una única constante** (`src/config/site.ts`) para cambiarlo en un solo lugar. El logo es un texto estilizado por ahora.
 
 ### Paleta por defecto: "Arcilla y salvia"
 Definila como variables CSS / tokens de Tailwind para poder cambiar de paleta tocando un solo archivo.
@@ -392,12 +392,12 @@ Si el tiempo se acaba, se entrega lo marcado completo y se documenta en `PROGRES
 - [x] Contador en navbar y página `/carrito`
 
 ### Fase 5 — Checkout, pagos y pedidos (P0)
-- [ ] Preguntas bloqueantes de MercadoPago resueltas (sección 0)
-- [ ] `/checkout`: entrega/retiro, direcciones (CRUD en `/cuenta/direcciones`), resumen
-- [ ] Creación de pedido + preferencia de MP + redirección
-- [ ] Webhook con validación de firma, idempotencia, descuento de stock y cambio de estado
-- [ ] `/checkout/resultado` con los tres casos
-- [ ] `/cuenta/pedidos` y detalle, con "Reintentar pago"
+- [ ] Preguntas bloqueantes de MercadoPago resueltas (sección 0) — faltan la URL pública del webhook y los usuarios de prueba
+- [x] `/checkout`: entrega/retiro, direcciones (CRUD en `/cuenta/direcciones`), resumen
+- [x] Creación de pedido + preferencia de MP + redirección
+- [x] Webhook con validación de firma, idempotencia, descuento de stock y cambio de estado
+- [x] `/checkout/resultado` con los tres casos
+- [x] `/cuenta/pedidos` y detalle, con "Reintentar pago"
 
 ### Fase 6 — Gestión de pedidos admin (P0)
 - [ ] Listado con filtros y detalle
@@ -445,7 +445,7 @@ Un módulo está terminado solo si:
 
 | Tema | Valor por defecto |
 |---|---|
-| Nombre de marca | `GAO Store` (constante única) |
+| Nombre de marca | `Nudo` (definido por el usuario, constante única) |
 | Paleta | "Arcilla y salvia" |
 | Comisión de venta | No se calcula; campos `null` |
 | Envío | Costo fijo configurable + opción de retiro |

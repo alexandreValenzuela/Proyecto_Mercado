@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-export const CLOUDINARY_FOLDER = "gao-store/products";
+export const CLOUDINARY_FOLDER = "nudo/products";
 
 export type CloudinaryConfig = {
   cloudName: string;
